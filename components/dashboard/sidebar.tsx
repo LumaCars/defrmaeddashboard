@@ -51,19 +51,19 @@ export function Sidebar({
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
+      <div className={cn(
+        "flex items-center border-b border-sidebar-border transition-all duration-300",
+        collapsed ? "h-16 px-3 justify-center" : "h-20 px-4"
+      )}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-white">
-            <CircleDollarSign className="w-5 h-5 text-accent-foreground" />
-          </div>
-          <span
+          <img
+            src="/images/logo.png"
+            alt="Borderless Banking Logo"
             className={cn(
-              "font-semibold text-lg text-sidebar-foreground whitespace-nowrap transition-all duration-300",
-              collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+              "object-contain shrink-0 transition-all duration-300",
+              collapsed ? "h-10 w-10" : "h-14 w-auto max-w-[200px]"
             )}
-          >
-            SalesOps
-          </span>
+          />
         </div>
       </div>
 
