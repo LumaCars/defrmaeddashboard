@@ -8,27 +8,55 @@ import { DealsSection } from "@/components/dashboard/sections/deals";
 import { CustomersSection } from "@/components/dashboard/sections/customers";
 import { TeamSection } from "@/components/dashboard/sections/team";
 import { SettingsSection } from "@/components/dashboard/sections/settings";
+import { initialOrders, type CustomerOrder } from "@/lib/orders-data";
 
 export type Section = "overview" | "deals" | "customers" | "team" | "settings";
 
 export default function Dashboard() {
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [orders, setOrders] = useState<CustomerOrder[]>(initialOrders);
+
+  const handleMarkCompleted = (email: string) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.email === email && o.status === "Processing"
+          ? { ...o, status: "Completed" as const }
+          : o
+      )
+    );
+  };
+
+  const handleUndoCompleted = (email: string) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.email === email && o.status === "Completed"
+          ? { ...o, status: "Processing" as const }
+          : o
+      )
+    );
+  };
 
   const renderSection = () => {
     switch (activeSection) {
       case "overview":
-        return <OverviewSection />;
+        return <OverviewSection orders={orders} />;
       case "deals":
         return <DealsSection />;
       case "customers":
-        return <CustomersSection />;
+        return (
+          <CustomersSection
+            orders={orders}
+            onMarkCompleted={handleMarkCompleted}
+            onUndoCompleted={handleUndoCompleted}
+          />
+        );
       case "team":
         return <TeamSection />;
       case "settings":
         return <SettingsSection />;
       default:
-        return <OverviewSection />;
+        return <OverviewSection orders={orders} />;
     }
   };
 

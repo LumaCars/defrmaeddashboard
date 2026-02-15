@@ -6,31 +6,42 @@ import { PipelineOverview } from "@/components/dashboard/charts/pipeline-overvie
 import { RecentDeals } from "@/components/dashboard/recent-deals";
 import { TopPerformers } from "@/components/dashboard/top-performers";
 import { DollarSign, CreditCard, Users, ShoppingCart } from "lucide-react";
+import { type CustomerOrder, cardPrices, formatEuroCompact } from "@/lib/orders-data";
 
-export function OverviewSection() {
+interface OverviewSectionProps {
+  orders: CustomerOrder[];
+}
+
+export function OverviewSection({ orders }: OverviewSectionProps) {
+  const totalRevenue = orders.reduce((sum, o) => sum + cardPrices[o.cardType], 0);
+  const totalOrders = orders.length;
+  const activeOrders = orders.filter((o) => o.status === "Processing").length;
+  const completedOrders = orders.filter((o) => o.status === "Completed").length;
+  const uniqueCustomers = new Set(orders.map((o) => o.email)).size;
+
   return (
     <div className="space-y-6">
       {/* Metric cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Revenue"
-          value="€55.5K"
-          change="+12.5%"
+          value={formatEuroCompact(totalRevenue)}
+          change={`${completedOrders} completed`}
           changeType="positive"
           icon={DollarSign}
           delay={0}
         />
         <MetricCard
           title="Card Orders"
-          value="8"
-          change="+3"
+          value={totalOrders.toString()}
+          change={`${activeOrders} active`}
           changeType="positive"
           icon={CreditCard}
           delay={1}
         />
         <MetricCard
           title="Active Orders"
-          value="4"
+          value={activeOrders.toString()}
           change="Processing"
           changeType="neutral"
           icon={ShoppingCart}
@@ -38,8 +49,8 @@ export function OverviewSection() {
         />
         <MetricCard
           title="Total Customers"
-          value="8"
-          change="+2"
+          value={uniqueCustomers.toString()}
+          change={`${completedOrders} completed`}
           changeType="positive"
           icon={Users}
           delay={3}
@@ -51,13 +62,13 @@ export function OverviewSection() {
         <div className="lg:col-span-2">
           <RevenueChart />
         </div>
-        <PipelineOverview />
+        <PipelineOverview orders={orders} />
       </div>
 
       {/* Bottom row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentDeals />
-        <TopPerformers />
+        <RecentDeals orders={orders} />
+        <TopPerformers orders={orders} />
       </div>
     </div>
   );

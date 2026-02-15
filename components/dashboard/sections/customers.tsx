@@ -11,78 +11,44 @@ import {
   CreditCard,
   ShoppingCart,
   Check,
+  Undo2,
+  ChevronRight,
 } from "lucide-react";
+import {
+  type CustomerOrder,
+  type CardType,
+  cardPrices,
+  formatEuroCompact,
+} from "@/lib/orders-data";
 
-type CardType = "Pro" | "Elite" | "Ultra";
-type PaymentMethod = "Crypto" | "Bank Transfer";
-
-const cardPrices: Record<CardType, number> = {
-  Pro: 1449,
-  Elite: 3599,
-  Ultra: 14499,
-};
-
-interface CustomerOrder {
-  id: string;
-  customerName: string;
-  email: string;
-  phone: string;
-  cardType: CardType;
-  cardColor: string;
-  paymentMethod: PaymentMethod;
-  orderDate: string;
-  status: "Processing" | "Completed";
+interface CustomersSectionProps {
+  orders: CustomerOrder[];
+  onMarkCompleted: (email: string) => void;
+  onUndoCompleted: (email: string) => void;
 }
 
-const initialOrders: CustomerOrder[] = [
-  { id: "1", customerName: "Alexander Müller", email: "a.mueller@mail.ch", phone: "+41 79 123 4567", cardType: "Ultra", cardColor: "24K Gold Edition", paymentMethod: "Crypto", orderDate: "2026-02-10", status: "Processing" },
-  { id: "2", customerName: "Sophie Laurent", email: "sophie.l@mail.fr", phone: "+33 6 12 34 56 78", cardType: "Elite", cardColor: "Matte Black", paymentMethod: "Bank Transfer", orderDate: "2026-02-08", status: "Processing" },
-  { id: "3", customerName: "James Whitfield", email: "j.whitfield@mail.uk", phone: "+44 7700 900123", cardType: "Pro", cardColor: "Rainbow", paymentMethod: "Crypto", orderDate: "2026-02-06", status: "Completed" },
-  { id: "4", customerName: "Lena Fischer", email: "lena.f@mail.de", phone: "+49 170 1234567", cardType: "Ultra", cardColor: "Brushed Black", paymentMethod: "Bank Transfer", orderDate: "2026-02-05", status: "Processing" },
-  { id: "5", customerName: "Marco Rossi", email: "m.rossi@mail.it", phone: "+39 345 678 9012", cardType: "Elite", cardColor: "White", paymentMethod: "Crypto", orderDate: "2026-02-04", status: "Completed" },
-  { id: "6", customerName: "Yuki Tanaka", email: "y.tanaka@mail.jp", phone: "+81 90 1234 5678", cardType: "Pro", cardColor: "Stainless Steel", paymentMethod: "Bank Transfer", orderDate: "2026-02-03", status: "Completed" },
-  { id: "7", customerName: "Elena Petrova", email: "e.petrova@mail.ae", phone: "+971 50 123 4567", cardType: "Ultra", cardColor: "Glossy Black", paymentMethod: "Crypto", orderDate: "2026-02-09", status: "Processing" },
-  { id: "8", customerName: "Carlos Mendez", email: "c.mendez@mail.mx", phone: "+52 55 1234 5678", cardType: "Pro", cardColor: "Blue", paymentMethod: "Bank Transfer", orderDate: "2026-02-07", status: "Completed" },
-];
-
-function formatEuro(value: number): string {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(value);
-}
-
-function formatEuroCompact(value: number): string {
-  if (value >= 1000000) {
-    return `€${(value / 1000000).toFixed(2)}M`;
-  }
-  if (value >= 1000) {
-    return `€${(value / 1000).toFixed(1)}K`;
-  }
-  return formatEuro(value);
-}
-
-export function CustomersSection() {
-  const [orders, setOrders] = useState<CustomerOrder[]>(initialOrders);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterCardType, setFilterCardType] = useState<string>("all");
-  const [filterPayment, setFilterPayment] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-
-  // Aggregate customers from orders
-  const customerMap = new Map<string, {
-    name: string;
-    email: string;
-    phone: string;
-    totalOrders: number;
-    lastOrderDate: string;
-    latestCardType: CardType;
-    latestCardColor: string;
-    paymentMethod: PaymentMethod;
-    latestStatus: "Processing" | "Completed";
-    latestOrderId: string;
-  }>();
+function buildCustomerMap(orders: CustomerOrder[]) {
+  const customerMap = new Map<
+    string,
+    {
+      name: string;
+      email: string;
+      phone: string;
+      totalOrders: number;
+      lastOrderDate: string;
+      latestCardType: CardType;
+      latestCardColor: string;
+      paymentMethod: "Crypto" | "Bank Transfer";
+      latestStatus: "Processing" | "Completed";
+    }
+  >();
 
   orders.forEach((order) => {
     const existing = customerMap.get(order.email);
-    if (!existing || new Date(order.orderDate) > new Date(existing.lastOrderDate)) {
+    if (
+      !existing ||
+      new Date(order.orderDate) > new Date(existing.lastOrderDate)
+    ) {
       const totalOrders = orders.filter((o) => o.email === order.email).length;
       customerMap.set(order.email, {
         name: order.customerName,
@@ -94,41 +60,244 @@ export function CustomersSection() {
         latestCardColor: order.cardColor,
         paymentMethod: order.paymentMethod,
         latestStatus: order.status,
-        latestOrderId: order.id,
       });
     }
   });
 
-  const customers = Array.from(customerMap.values());
+  return Array.from(customerMap.values());
+}
+
+export function CustomersSection({
+  orders,
+  onMarkCompleted,
+  onUndoCompleted,
+}: CustomersSectionProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCardType, setFilterCardType] = useState<string>("all");
+  const [filterPayment, setFilterPayment] = useState<string>("all");
+  const [completedExpanded, setCompletedExpanded] = useState(true);
+
+  const customers = buildCustomerMap(orders);
 
   // KPIs
   const totalCustomers = customers.length;
-  const totalRevenue = orders.reduce((sum, o) => sum + cardPrices[o.cardType], 0);
-  const activeCardOrders = orders.filter((o) => o.status === "Processing").length;
+  const totalRevenue = orders.reduce(
+    (sum, o) => sum + cardPrices[o.cardType],
+    0
+  );
+  const activeCardOrders = orders.filter(
+    (o) => o.status === "Processing"
+  ).length;
+  const completedCardOrders = orders.filter(
+    (o) => o.status === "Completed"
+  ).length;
 
-  // Top ordered card type
-  const cardTypeCounts: Record<CardType, number> = { Pro: 0, Elite: 0, Ultra: 0 };
-  orders.forEach((o) => cardTypeCounts[o.cardType]++);
-  const topCardType = (Object.entries(cardTypeCounts) as [CardType, number][]).sort((a, b) => b[1] - a[1])[0][0];
-
-  // Filtered customers
-  const filteredCustomers = customers.filter((c) => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterCardType === "all" || c.latestCardType === filterCardType;
-    const matchesPayment = filterPayment === "all" || c.paymentMethod === filterPayment;
-    const matchesStatus = filterStatus === "all" || c.latestStatus === filterStatus;
-    return matchesSearch && matchesType && matchesPayment && matchesStatus;
-  });
-
-  const handleMarkCompleted = (email: string) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.email === email && o.status === "Processing" ? { ...o, status: "Completed" as const } : o
-      )
-    );
+  const cardTypeCounts: Record<CardType, number> = {
+    Pro: 0,
+    Elite: 0,
+    Ultra: 0,
   };
+  orders.forEach((o) => cardTypeCounts[o.cardType]++);
+  const topCardType = (
+    Object.entries(cardTypeCounts) as [CardType, number][]
+  ).sort((a, b) => b[1] - a[1])[0][0];
+
+  // Split into active and completed
+  const activeCustomers = customers.filter(
+    (c) => c.latestStatus === "Processing"
+  );
+  const completedCustomers = customers.filter(
+    (c) => c.latestStatus === "Completed"
+  );
+
+  // Apply filters
+  const applyFilters = (
+    list: typeof customers
+  ) =>
+    list.filter((c) => {
+      const matchesSearch =
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType =
+        filterCardType === "all" || c.latestCardType === filterCardType;
+      const matchesPayment =
+        filterPayment === "all" || c.paymentMethod === filterPayment;
+      return matchesSearch && matchesType && matchesPayment;
+    });
+
+  const filteredActive = applyFilters(activeCustomers);
+  const filteredCompleted = applyFilters(completedCustomers);
+
+  const cardTypeBg: Record<CardType, string> = {
+    Pro: "bg-chart-1/10 text-chart-1",
+    Elite: "bg-accent/10 text-accent",
+    Ultra: "bg-warning/10 text-warning",
+  };
+
+  const renderRow = (
+    customer: (typeof customers)[0],
+    index: number,
+    isCompleted: boolean
+  ) => (
+    <tr
+      key={customer.email}
+      className={cn(
+        "border-b border-border last:border-0 transition-colors duration-150 animate-in fade-in slide-in-from-left-2",
+        isCompleted
+          ? "opacity-50"
+          : "hover:bg-secondary/30"
+      )}
+      style={{
+        animationDelay: `${index * 50}ms`,
+        animationFillMode: "both",
+      }}
+    >
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "w-8 h-8 rounded-md flex items-center justify-center text-xs font-semibold",
+              isCompleted
+                ? "bg-muted text-muted-foreground"
+                : "bg-secondary text-muted-foreground"
+            )}
+          >
+            {customer.name.charAt(0)}
+          </div>
+          <span
+            className={cn(
+              "text-sm font-medium",
+              isCompleted ? "text-muted-foreground line-through" : "text-foreground"
+            )}
+          >
+            {customer.name}
+          </span>
+        </div>
+      </td>
+      <td className="py-4 px-4">
+        <span className="text-sm text-muted-foreground">{customer.email}</span>
+      </td>
+      <td className="py-4 px-4">
+        <span className="text-sm text-muted-foreground">{customer.phone}</span>
+      </td>
+      <td className="py-4 px-4">
+        <span
+          className={cn(
+            "text-sm font-medium",
+            isCompleted ? "text-muted-foreground" : "text-foreground"
+          )}
+        >
+          {customer.totalOrders}
+        </span>
+      </td>
+      <td className="py-4 px-4">
+        <span className="text-sm text-muted-foreground">
+          {customer.lastOrderDate}
+        </span>
+      </td>
+      <td className="py-4 px-4">
+        <span
+          className={cn(
+            "px-2 py-1 rounded-md text-xs font-medium",
+            isCompleted
+              ? "bg-muted text-muted-foreground"
+              : cardTypeBg[customer.latestCardType]
+          )}
+        >
+          {customer.latestCardType} Card
+        </span>
+      </td>
+      <td className="py-4 px-4">
+        <span
+          className={cn(
+            "text-sm",
+            isCompleted ? "text-muted-foreground" : "text-foreground"
+          )}
+        >
+          {customer.latestCardColor}
+        </span>
+      </td>
+      <td className="py-4 px-4">
+        <span
+          className={cn(
+            "px-2 py-1 rounded-md text-xs font-medium",
+            isCompleted
+              ? "bg-muted text-muted-foreground"
+              : "bg-secondary text-foreground"
+          )}
+        >
+          {customer.paymentMethod}
+        </span>
+      </td>
+      <td className="py-4 px-4">
+        {isCompleted ? (
+          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-muted text-muted-foreground">
+            Completed
+          </span>
+        ) : (
+          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-warning/10 text-warning">
+            Processing
+          </span>
+        )}
+      </td>
+      <td className="py-4 px-4">
+        {isCompleted ? (
+          <button
+            onClick={() => onUndoCompleted(customer.email)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-warning/10 hover:text-warning hover:border-warning/30 transition-all duration-200"
+            title="Undo - mark as processing"
+          >
+            <Undo2 className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={() => onMarkCompleted(customer.email)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-success/10 hover:text-success hover:border-success/30 transition-all duration-200"
+            title="Mark as completed"
+          >
+            <Check className="w-4 h-4" />
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+
+  const tableHead = (
+    <thead>
+      <tr className="border-b border-border bg-secondary/50">
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Customer Name
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Email
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Phone
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Total Orders
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Last Order
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Card Type
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Card Color
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Payment
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Status
+        </th>
+        <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Action
+        </th>
+      </tr>
+    </thead>
+  );
 
   return (
     <div className="space-y-6">
@@ -157,17 +326,20 @@ export function CustomersSection() {
             description: `${cardTypeCounts[topCardType]} orders`,
           },
           {
-            label: "Active Card Orders",
-            value: activeCardOrders.toString(),
+            label: "Active / Completed",
+            value: `${activeCardOrders} / ${completedCardOrders}`,
             icon: ShoppingCart,
             color: "text-warning",
-            description: "Not yet completed",
+            description: "Processing vs completed",
           },
         ].map((stat, index) => (
           <Card
             key={stat.label}
             className="border-border bg-card hover:border-muted-foreground/30 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
-            style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+            style={{
+              animationDelay: `${index * 50}ms`,
+              animationFillMode: "both",
+            }}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-3">
@@ -175,11 +347,15 @@ export function CustomersSection() {
                   <stat.icon className={cn("w-6 h-6", stat.color)} />
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
+              <p className="text-sm text-muted-foreground font-medium">
+                {stat.label}
+              </p>
               <p className={cn("text-3xl font-bold mt-1", stat.color)}>
                 {stat.value}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stat.description}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -224,134 +400,87 @@ export function CustomersSection() {
           </select>
           <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         </div>
-
-        <div className="relative">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="h-9 pl-3 pr-8 rounded-lg bg-secondary border border-border text-sm text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
-          >
-            <option value="all">All Statuses</option>
-            <option value="Processing">Processing</option>
-            <option value="Completed">Completed</option>
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-        </div>
       </div>
 
-      {/* Customer Table */}
+      {/* Active Customers Table */}
       <div className="bg-card border border-border rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="px-5 py-4 border-b border-border">
-          <h3 className="text-base font-semibold text-foreground">Customers with Card Orders</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">All-time customer data</p>
+          <h3 className="text-base font-semibold text-foreground">
+            Active Customers
+          </h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {filteredActive.length} customer{filteredActive.length !== 1 ? "s" : ""} with
+            open orders
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer Name</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Phone</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Orders</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Order</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Card Type</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Card Color</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Payment</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
-              </tr>
-            </thead>
+            {tableHead}
             <tbody>
-              {filteredCustomers.length === 0 ? (
+              {filteredActive.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-16 text-center">
-                    <p className="text-muted-foreground text-sm">No customers yet</p>
+                    <p className="text-muted-foreground text-sm">
+                      No active customers
+                    </p>
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer, index) => {
-                  const cardTypeBg: Record<CardType, string> = {
-                    Pro: "bg-chart-1/10 text-chart-1",
-                    Elite: "bg-accent/10 text-accent",
-                    Ultra: "bg-warning/10 text-warning",
-                  };
-
-                  return (
-                    <tr
-                      key={customer.email}
-                      className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors duration-150 animate-in fade-in slide-in-from-left-2"
-                      style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
-                    >
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-md bg-secondary flex items-center justify-center text-xs font-semibold text-muted-foreground">
-                            {customer.name.charAt(0)}
-                          </div>
-                          <span className="text-sm font-medium text-foreground">{customer.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm text-muted-foreground">{customer.email}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm text-muted-foreground">{customer.phone}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm font-medium text-foreground">{customer.totalOrders}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm text-muted-foreground">{customer.lastOrderDate}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={cn("px-2 py-1 rounded-md text-xs font-medium", cardTypeBg[customer.latestCardType])}>
-                          {customer.latestCardType} Card
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm text-foreground">{customer.latestCardColor}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="px-2 py-1 rounded-md bg-secondary text-xs font-medium text-foreground">
-                          {customer.paymentMethod}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={cn(
-                          "inline-flex items-center px-2 py-1 rounded-md text-xs font-medium",
-                          customer.latestStatus === "Completed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
-                        )}>
-                          {customer.latestStatus}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        {customer.latestStatus === "Processing" ? (
-                          <button
-                            onClick={() => handleMarkCompleted(customer.email)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-success/10 hover:text-success hover:border-success/30 transition-all duration-200"
-                            title="Mark as completed"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-success/10">
-                            <Check className="w-4 h-4 text-success" />
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
+                filteredActive.map((customer, index) =>
+                  renderRow(customer, index, false)
+                )
               )}
             </tbody>
           </table>
         </div>
-
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-secondary/30">
-          <span className="text-sm text-muted-foreground">
-            Showing {filteredCustomers.length} of {customers.length} customers
-          </span>
-        </div>
       </div>
+
+      {/* Completed Customers Section */}
+      {completedCustomers.length > 0 && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <button
+            onClick={() => setCompletedExpanded(!completedExpanded)}
+            className="w-full px-5 py-4 border-b border-border flex items-center justify-between hover:bg-secondary/30 transition-colors duration-200"
+          >
+            <div className="text-left">
+              <h3 className="text-base font-semibold text-muted-foreground">
+                Erledigte Kunden
+              </h3>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {filteredCompleted.length} completed customer{filteredCompleted.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <ChevronRight
+              className={cn(
+                "w-5 h-5 text-muted-foreground transition-transform duration-200",
+                completedExpanded && "rotate-90"
+              )}
+            />
+          </button>
+          {completedExpanded && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                {tableHead}
+                <tbody>
+                  {filteredCompleted.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="py-12 text-center">
+                        <p className="text-muted-foreground text-sm">
+                          No completed customers matching filters
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCompleted.map((customer, index) =>
+                      renderRow(customer, index, true)
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
