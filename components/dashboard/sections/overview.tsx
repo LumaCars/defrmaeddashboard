@@ -5,7 +5,7 @@ import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
 import { PipelineOverview } from "@/components/dashboard/charts/pipeline-overview";
 import { RecentDeals } from "@/components/dashboard/recent-deals";
 import { TopPerformers } from "@/components/dashboard/top-performers";
-import { DollarSign, TrendingUp, Users, Target } from "lucide-react";
+import { DollarSign, CreditCard, Users, ShoppingCart } from "lucide-react";
 
 export function OverviewSection() {
   return (
@@ -14,32 +14,32 @@ export function OverviewSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Revenue"
-          value="$2.4M"
+          value="€55.5K"
           change="+12.5%"
           changeType="positive"
           icon={DollarSign}
           delay={0}
         />
         <MetricCard
-          title="Conversion Rate"
-          value="24.8%"
-          change="+3.2%"
+          title="Card Orders"
+          value="8"
+          change="+3"
           changeType="positive"
-          icon={TrendingUp}
+          icon={CreditCard}
           delay={1}
         />
         <MetricCard
-          title="Active Deals"
-          value="147"
-          change="-5"
-          changeType="negative"
-          icon={Target}
+          title="Active Orders"
+          value="4"
+          change="Processing"
+          changeType="neutral"
+          icon={ShoppingCart}
           delay={2}
         />
         <MetricCard
-          title="New Leads"
-          value="892"
-          change="+18.3%"
+          title="Total Customers"
+          value="8"
+          change="+2"
           changeType="positive"
           icon={Users}
           delay={3}

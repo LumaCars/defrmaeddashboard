@@ -8,7 +8,7 @@ import type { Section } from "@/app/page";
 import {
   LayoutDashboard,
   GitBranch,
-  Handshake,
+  CreditCard,
   Users,
   BarChart3,
   ChevronLeft,
@@ -29,7 +29,7 @@ interface SidebarProps {
 const navItems: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "pipeline", label: "Pipeline", icon: GitBranch },
-  { id: "deals", label: "Deals", icon: Handshake },
+  { id: "deals", label: "Card Orders", icon: CreditCard },
   { id: "customers", label: "Customers", icon: Building2 },
   { id: "team", label: "Team", icon: Users },
   { id: "forecasting", label: "Forecasting", icon: TrendingUp },

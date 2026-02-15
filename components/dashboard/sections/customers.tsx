@@ -1,344 +1,356 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Building2,
   Search,
-  Plus,
-  MapPin,
-  Mail,
-  Phone,
+  ChevronDown,
+  Users,
   DollarSign,
-  Calendar,
-  ExternalLink,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Filter,
+  CreditCard,
+  ShoppingCart,
+  Check,
 } from "lucide-react";
 
-const customers = [
-  {
-    id: 1,
-    name: "Acme Corporation",
-    industry: "Technology",
-    tier: "Enterprise",
-    location: "San Francisco, CA",
-    contact: "John Smith",
-    email: "john@acme.com",
-    phone: "+1 (555) 123-4567",
-    totalRevenue: 485000,
-    activeDeals: 3,
-    healthScore: 92,
-    trend: "up",
-    lastContact: "2 days ago",
-  },
-  {
-    id: 2,
-    name: "GlobalTech Industries",
-    industry: "Manufacturing",
-    tier: "Enterprise",
-    location: "New York, NY",
-    contact: "Sarah Johnson",
-    email: "sarah@globaltech.com",
-    phone: "+1 (555) 234-5678",
-    totalRevenue: 320000,
-    activeDeals: 2,
-    healthScore: 85,
-    trend: "up",
-    lastContact: "1 week ago",
-  },
-  {
-    id: 3,
-    name: "Innovate Labs",
-    industry: "Healthcare",
-    tier: "Growth",
-    location: "Boston, MA",
-    contact: "Michael Chen",
-    email: "michael@innovatelabs.com",
-    phone: "+1 (555) 345-6789",
-    totalRevenue: 156000,
-    activeDeals: 1,
-    healthScore: 78,
-    trend: "stable",
-    lastContact: "3 days ago",
-  },
-  {
-    id: 4,
-    name: "DataStream Analytics",
-    industry: "Data Services",
-    tier: "Growth",
-    location: "Austin, TX",
-    contact: "Emily Rodriguez",
-    email: "emily@datastream.com",
-    phone: "+1 (555) 456-7890",
-    totalRevenue: 98000,
-    activeDeals: 2,
-    healthScore: 65,
-    trend: "down",
-    lastContact: "2 weeks ago",
-  },
-  {
-    id: 5,
-    name: "NextGen Solutions",
-    industry: "Finance",
-    tier: "Starter",
-    location: "Chicago, IL",
-    contact: "David Park",
-    email: "david@nextgen.com",
-    phone: "+1 (555) 567-8901",
-    totalRevenue: 45000,
-    activeDeals: 1,
-    healthScore: 88,
-    trend: "up",
-    lastContact: "Yesterday",
-  },
-  {
-    id: 6,
-    name: "CloudFirst Inc",
-    industry: "Cloud Services",
-    tier: "Enterprise",
-    location: "Seattle, WA",
-    contact: "Lisa Wang",
-    email: "lisa@cloudfirst.com",
-    phone: "+1 (555) 678-9012",
-    totalRevenue: 275000,
-    activeDeals: 4,
-    healthScore: 95,
-    trend: "up",
-    lastContact: "Today",
-  },
-];
+type CardType = "Pro" | "Elite" | "Ultra";
+type PaymentMethod = "Crypto" | "Bank Transfer";
 
-const tierColors: Record<string, string> = {
-  Enterprise: "bg-accent/20 text-accent border-accent/30",
-  Growth: "bg-chart-1/20 text-chart-1 border-chart-1/30",
-  Starter: "bg-muted text-muted-foreground border-border",
+const cardPrices: Record<CardType, number> = {
+  Pro: 1449,
+  Elite: 3599,
+  Ultra: 14499,
 };
 
-export function CustomersSection() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+interface CustomerOrder {
+  id: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  cardType: CardType;
+  cardColor: string;
+  paymentMethod: PaymentMethod;
+  orderDate: string;
+  status: "Processing" | "Completed";
+}
 
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch =
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.contact.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTier = !selectedTier || customer.tier === selectedTier;
-    return matchesSearch && matchesTier;
+const initialOrders: CustomerOrder[] = [
+  { id: "1", customerName: "Alexander Müller", email: "a.mueller@mail.ch", phone: "+41 79 123 4567", cardType: "Ultra", cardColor: "24K Gold Edition", paymentMethod: "Crypto", orderDate: "2026-02-10", status: "Processing" },
+  { id: "2", customerName: "Sophie Laurent", email: "sophie.l@mail.fr", phone: "+33 6 12 34 56 78", cardType: "Elite", cardColor: "Matte Black", paymentMethod: "Bank Transfer", orderDate: "2026-02-08", status: "Processing" },
+  { id: "3", customerName: "James Whitfield", email: "j.whitfield@mail.uk", phone: "+44 7700 900123", cardType: "Pro", cardColor: "Rainbow", paymentMethod: "Crypto", orderDate: "2026-02-06", status: "Completed" },
+  { id: "4", customerName: "Lena Fischer", email: "lena.f@mail.de", phone: "+49 170 1234567", cardType: "Ultra", cardColor: "Brushed Black", paymentMethod: "Bank Transfer", orderDate: "2026-02-05", status: "Processing" },
+  { id: "5", customerName: "Marco Rossi", email: "m.rossi@mail.it", phone: "+39 345 678 9012", cardType: "Elite", cardColor: "White", paymentMethod: "Crypto", orderDate: "2026-02-04", status: "Completed" },
+  { id: "6", customerName: "Yuki Tanaka", email: "y.tanaka@mail.jp", phone: "+81 90 1234 5678", cardType: "Pro", cardColor: "Stainless Steel", paymentMethod: "Bank Transfer", orderDate: "2026-02-03", status: "Completed" },
+  { id: "7", customerName: "Elena Petrova", email: "e.petrova@mail.ae", phone: "+971 50 123 4567", cardType: "Ultra", cardColor: "Glossy Black", paymentMethod: "Crypto", orderDate: "2026-02-09", status: "Processing" },
+  { id: "8", customerName: "Carlos Mendez", email: "c.mendez@mail.mx", phone: "+52 55 1234 5678", cardType: "Pro", cardColor: "Blue", paymentMethod: "Bank Transfer", orderDate: "2026-02-07", status: "Completed" },
+];
+
+function formatEuro(value: number): string {
+  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(value);
+}
+
+function formatEuroCompact(value: number): string {
+  if (value >= 1000000) {
+    return `€${(value / 1000000).toFixed(2)}M`;
+  }
+  if (value >= 1000) {
+    return `€${(value / 1000).toFixed(1)}K`;
+  }
+  return formatEuro(value);
+}
+
+export function CustomersSection() {
+  const [orders, setOrders] = useState<CustomerOrder[]>(initialOrders);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCardType, setFilterCardType] = useState<string>("all");
+  const [filterPayment, setFilterPayment] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  // Aggregate customers from orders
+  const customerMap = new Map<string, {
+    name: string;
+    email: string;
+    phone: string;
+    totalOrders: number;
+    lastOrderDate: string;
+    latestCardType: CardType;
+    latestCardColor: string;
+    paymentMethod: PaymentMethod;
+    latestStatus: "Processing" | "Completed";
+    latestOrderId: string;
+  }>();
+
+  orders.forEach((order) => {
+    const existing = customerMap.get(order.email);
+    if (!existing || new Date(order.orderDate) > new Date(existing.lastOrderDate)) {
+      const totalOrders = orders.filter((o) => o.email === order.email).length;
+      customerMap.set(order.email, {
+        name: order.customerName,
+        email: order.email,
+        phone: order.phone,
+        totalOrders,
+        lastOrderDate: order.orderDate,
+        latestCardType: order.cardType,
+        latestCardColor: order.cardColor,
+        paymentMethod: order.paymentMethod,
+        latestStatus: order.status,
+        latestOrderId: order.id,
+      });
+    }
   });
 
-  const totalRevenue = customers.reduce((acc, c) => acc + c.totalRevenue, 0);
-  const avgHealthScore = Math.round(
-    customers.reduce((acc, c) => acc + c.healthScore, 0) / customers.length
-  );
+  const customers = Array.from(customerMap.values());
+
+  // KPIs
+  const totalCustomers = customers.length;
+  const totalRevenue = orders.reduce((sum, o) => sum + cardPrices[o.cardType], 0);
+  const activeCardOrders = orders.filter((o) => o.status === "Processing").length;
+
+  // Top ordered card type
+  const cardTypeCounts: Record<CardType, number> = { Pro: 0, Elite: 0, Ultra: 0 };
+  orders.forEach((o) => cardTypeCounts[o.cardType]++);
+  const topCardType = (Object.entries(cardTypeCounts) as [CardType, number][]).sort((a, b) => b[1] - a[1])[0][0];
+
+  // Filtered customers
+  const filteredCustomers = customers.filter((c) => {
+    const matchesSearch =
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterCardType === "all" || c.latestCardType === filterCardType;
+    const matchesPayment = filterPayment === "all" || c.paymentMethod === filterPayment;
+    const matchesStatus = filterStatus === "all" || c.latestStatus === filterStatus;
+    return matchesSearch && matchesType && matchesPayment && matchesStatus;
+  });
+
+  const handleMarkCompleted = (email: string) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.email === email && o.status === "Processing" ? { ...o, status: "Completed" as const } : o
+      )
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             label: "Total Customers",
-            value: customers.length.toString(),
-            icon: Building2,
+            value: totalCustomers.toString(),
+            icon: Users,
             color: "text-foreground",
+            description: "All-time",
           },
           {
             label: "Total Revenue",
-            value: `$${(totalRevenue / 1000000).toFixed(2)}M`,
+            value: formatEuroCompact(totalRevenue),
             icon: DollarSign,
             color: "text-accent",
+            description: "Card orders revenue",
           },
           {
-            label: "Avg Health Score",
-            value: `${avgHealthScore}%`,
-            icon: Star,
-            color: "text-chart-3",
-          },
-          {
-            label: "Active Deals",
-            value: customers.reduce((acc, c) => acc + c.activeDeals, 0).toString(),
-            icon: TrendingUp,
+            label: "Top Ordered Card",
+            value: `${topCardType} Card`,
+            icon: CreditCard,
             color: "text-chart-1",
+            description: `${cardTypeCounts[topCardType]} orders`,
+          },
+          {
+            label: "Active Card Orders",
+            value: activeCardOrders.toString(),
+            icon: ShoppingCart,
+            color: "text-warning",
+            description: "Not yet completed",
           },
         ].map((stat, index) => (
           <Card
             key={stat.label}
-            className="border-border bg-card hover:border-muted-foreground/30 transition-all duration-300"
-            style={{ animationDelay: `${index * 50}ms` }}
+            className="border-border bg-card hover:border-muted-foreground/30 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+            style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className={`text-2xl font-semibold mt-1 ${stat.color}`}>
-                    {stat.value}
-                  </p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                  <stat.icon className={cn("w-6 h-6", stat.color)} />
                 </div>
-                <stat.icon className={`w-8 h-8 ${stat.color} opacity-50`} />
               </div>
+              <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
+              <p className={cn("text-3xl font-bold mt-1", stat.color)}>
+                {stat.value}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search customers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-[280px] bg-secondary border-border focus:border-accent"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            {["Enterprise", "Growth", "Starter"].map((tier) => (
-              <Button
-                key={tier}
-                variant={selectedTier === tier ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedTier(selectedTier === tier ? null : tier)}
-                className={selectedTier === tier ? "bg-accent text-accent-foreground" : ""}
-              >
-                {tier}
-              </Button>
-            ))}
-          </div>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64 h-9 pl-9 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent transition-all duration-200"
+          />
         </div>
-        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Customer
-        </Button>
+
+        <div className="relative">
+          <select
+            value={filterCardType}
+            onChange={(e) => setFilterCardType(e.target.value)}
+            className="h-9 pl-3 pr-8 rounded-lg bg-secondary border border-border text-sm text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+          >
+            <option value="all">All Card Types</option>
+            <option value="Pro">Pro Card</option>
+            <option value="Elite">Elite Card</option>
+            <option value="Ultra">Ultra Card</option>
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+        </div>
+
+        <div className="relative">
+          <select
+            value={filterPayment}
+            onChange={(e) => setFilterPayment(e.target.value)}
+            className="h-9 pl-3 pr-8 rounded-lg bg-secondary border border-border text-sm text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+          >
+            <option value="all">All Payments</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+        </div>
+
+        <div className="relative">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="h-9 pl-3 pr-8 rounded-lg bg-secondary border border-border text-sm text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+          >
+            <option value="all">All Statuses</option>
+            <option value="Processing">Processing</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+        </div>
       </div>
 
-      {/* Customer Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filteredCustomers.map((customer, index) => (
-          <Card
-            key={customer.id}
-            className="border-border bg-card hover:border-accent/50 transition-all duration-300 group animate-in fade-in slide-in-from-bottom-2"
-            style={{ animationDelay: `${index * 75}ms` }}
-          >
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12 bg-secondary">
-                    <AvatarFallback className="bg-secondary text-foreground font-semibold">
-                      {customer.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-accent transition-colors">
-                      {customer.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{customer.industry}</p>
-                  </div>
-                </div>
-                <Badge className={`${tierColors[customer.tier]} border`}>
-                  {customer.tier}
-                </Badge>
-              </div>
+      {/* Customer Table */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="text-base font-semibold text-foreground">Customers with Card Orders</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">All-time customer data</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-secondary/50">
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer Name</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Phone</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Orders</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Order</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Card Type</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Card Color</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Payment</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-16 text-center">
+                    <p className="text-muted-foreground text-sm">No customers yet</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredCustomers.map((customer, index) => {
+                  const cardTypeBg: Record<CardType, string> = {
+                    Pro: "bg-chart-1/10 text-chart-1",
+                    Elite: "bg-accent/10 text-accent",
+                    Ultra: "bg-warning/10 text-warning",
+                  };
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {customer.location}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="w-3.5 h-3.5" />
-                    {customer.email}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="w-3.5 h-3.5" />
-                    {customer.phone}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Revenue</span>
-                    <span className="font-medium text-foreground">
-                      ${customer.totalRevenue.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Active Deals</span>
-                    <span className="font-medium text-foreground">{customer.activeDeals}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Last Contact</span>
-                    <span className="font-medium text-foreground">{customer.lastContact}</span>
-                  </div>
-                </div>
-              </div>
+                  return (
+                    <tr
+                      key={customer.email}
+                      className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors duration-150 animate-in fade-in slide-in-from-left-2"
+                      style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+                    >
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-md bg-secondary flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                            {customer.name.charAt(0)}
+                          </div>
+                          <span className="text-sm font-medium text-foreground">{customer.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="text-sm text-muted-foreground">{customer.email}</span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="text-sm text-muted-foreground">{customer.phone}</span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="text-sm font-medium text-foreground">{customer.totalOrders}</span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="text-sm text-muted-foreground">{customer.lastOrderDate}</span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={cn("px-2 py-1 rounded-md text-xs font-medium", cardTypeBg[customer.latestCardType])}>
+                          {customer.latestCardType} Card
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="text-sm text-foreground">{customer.latestCardColor}</span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="px-2 py-1 rounded-md bg-secondary text-xs font-medium text-foreground">
+                          {customer.paymentMethod}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={cn(
+                          "inline-flex items-center px-2 py-1 rounded-md text-xs font-medium",
+                          customer.latestStatus === "Completed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
+                        )}>
+                          {customer.latestStatus}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        {customer.latestStatus === "Processing" ? (
+                          <button
+                            onClick={() => handleMarkCompleted(customer.email)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-success/10 hover:text-success hover:border-success/30 transition-all duration-200"
+                            title="Mark as completed"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-success/10">
+                            <Check className="w-4 h-4 text-success" />
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
 
-              {/* Health Score */}
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Health Score</span>
-                  {customer.trend === "up" && (
-                    <TrendingUp className="w-3.5 h-3.5 text-accent" />
-                  )}
-                  {customer.trend === "down" && (
-                    <TrendingDown className="w-3.5 h-3.5 text-destructive" />
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-1000 ease-out"
-                      style={{
-                        width: `${customer.healthScore}%`,
-                        backgroundColor:
-                          customer.healthScore >= 80
-                            ? "oklch(0.7 0.18 145)"
-                            : customer.healthScore >= 60
-                            ? "oklch(0.75 0.18 55)"
-                            : "oklch(0.65 0.2 25)",
-                      }}
-                    />
-                  </div>
-                  <span
-                    className={`text-sm font-semibold ${
-                      customer.healthScore >= 80
-                        ? "text-accent"
-                        : customer.healthScore >= 60
-                        ? "text-chart-3"
-                        : "text-destructive"
-                    }`}
-                  >
-                    {customer.healthScore}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-                <Button variant="outline" size="sm" className="flex-1 bg-transparent">
-                  <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                  Schedule
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 bg-transparent">
-                  <Mail className="w-3.5 h-3.5 mr-1.5" />
-                  Email
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-secondary/30">
+          <span className="text-sm text-muted-foreground">
+            Showing {filteredCustomers.length} of {customers.length} customers
+          </span>
+        </div>
       </div>
     </div>
   );

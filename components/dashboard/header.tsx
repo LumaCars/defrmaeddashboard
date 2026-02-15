@@ -12,9 +12,12 @@ interface HeaderProps {
 const sectionTitles: Record<Section, string> = {
   overview: "Overview",
   pipeline: "Pipeline",
-  deals: "Deals",
-  team: "Team Performance",
+  deals: "Card Orders",
+  customers: "Customers",
+  team: "Team Dashboard",
+  forecasting: "Forecasting",
   reports: "Reports",
+  settings: "Settings",
 };
 
 export function Header({ activeSection }: HeaderProps) {
@@ -28,7 +31,7 @@ export function Header({ activeSection }: HeaderProps) {
         </h1>
         <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="w-4 h-4" />
-          <span>Last 30 days</span>
+          <span>Last 14 days</span>
         </div>
       </div>
 
