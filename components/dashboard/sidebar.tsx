@@ -52,19 +52,22 @@ export function Sidebar({
     >
       {/* Logo */}
       <div className={cn(
-        "flex items-center border-b border-sidebar-border transition-all duration-300",
-        collapsed ? "h-16 px-3 justify-center" : "h-20 px-4"
+        "flex items-center border-b border-sidebar-border transition-all duration-300 overflow-hidden",
+        collapsed ? "h-16 px-2 justify-center" : "h-20 px-4"
       )}>
-        <div className="flex items-center gap-3">
+        {collapsed ? (
+          <img
+            src="/images/logo-icon.svg"
+            alt="Logo"
+            className="h-11 w-11 object-contain shrink-0"
+          />
+        ) : (
           <img
             src="/images/logo.png"
             alt="Borderless Banking Logo"
-            className={cn(
-              "object-contain shrink-0 transition-all duration-300",
-              collapsed ? "h-10 w-10" : "h-14 w-auto max-w-[200px]"
-            )}
+            className="h-14 w-auto max-w-[200px] object-contain shrink-0"
           />
-        </div>
+        )}
       </div>
 
       {/* Navigation */}
