@@ -46,6 +46,13 @@ export function TopPerformers({ orders }: TopPerformersProps) {
       </div>
 
       <div className="space-y-4">
+        {totalOrders === 0 && (
+          <div className="py-12 flex flex-col items-center gap-2">
+            <CreditCard className="w-8 h-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No orders yet</p>
+            <p className="text-xs text-muted-foreground/60">Card type breakdown will appear here</p>
+          </div>
+        )}
         {breakdown.map((card, index) => (
           <div
             key={card.type}

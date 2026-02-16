@@ -98,9 +98,11 @@ export function CustomersSection({
     Ultra: 0,
   };
   orders.forEach((o) => cardTypeCounts[o.cardType]++);
-  const topCardType = (
+  const topCardEntry = (
     Object.entries(cardTypeCounts) as [CardType, number][]
-  ).sort((a, b) => b[1] - a[1])[0][0];
+  ).sort((a, b) => b[1] - a[1])[0];
+  const topCardType = topCardEntry ? topCardEntry[0] : "Pro";
+  const topCardCount = topCardEntry ? topCardEntry[1] : 0;
 
   // Split into active and completed
   const activeCustomers = customers.filter(
@@ -323,7 +325,7 @@ export function CustomersSection({
             value: `${topCardType} Card`,
             icon: CreditCard,
             color: "text-chart-1",
-            description: `${cardTypeCounts[topCardType]} orders`,
+            description: `${topCardCount} orders`,
           },
           {
             label: "Active / Completed",

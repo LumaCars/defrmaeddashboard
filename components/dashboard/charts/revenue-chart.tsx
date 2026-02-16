@@ -11,16 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { day: "Feb 3", revenue: 1449, orders: 1 },
-  { day: "Feb 4", revenue: 3599, orders: 1 },
-  { day: "Feb 5", revenue: 14499, orders: 1 },
-  { day: "Feb 6", revenue: 1449, orders: 1 },
-  { day: "Feb 7", revenue: 1449, orders: 1 },
-  { day: "Feb 8", revenue: 3599, orders: 1 },
-  { day: "Feb 9", revenue: 14499, orders: 1 },
-  { day: "Feb 10", revenue: 14499, orders: 1 },
-];
+const data: { day: string; revenue: number; orders: number }[] = [];
 
 const cumulativeData = data.reduce<{ day: string; revenue: number; cumulative: number }[]>(
   (acc, item) => {
@@ -66,6 +57,15 @@ export function RevenueChart() {
       </div>
 
       <div className={`h-[280px] transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
+        {cumulativeData.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+              <svg className="w-5 h-5 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+            </div>
+            <p className="text-sm text-muted-foreground">No revenue data yet</p>
+            <p className="text-xs text-muted-foreground/60">Revenue will appear here as orders come in</p>
+          </div>
+        ) : (
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={cumulativeData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
@@ -125,6 +125,7 @@ export function RevenueChart() {
             />
           </AreaChart>
         </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

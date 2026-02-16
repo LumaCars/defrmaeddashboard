@@ -35,16 +35,7 @@ interface CardOrder {
   status: "Processing" | "Completed";
 }
 
-const cardOrders: CardOrder[] = [
-  { id: "1", customerName: "Alexander Müller", cardType: "Ultra", cardColor: "24K Gold Edition", address: "Bahnhofstrasse 12, Zürich", engravedName: { enabled: true, value: "A. MÜLLER" }, paymentMethod: "Crypto", orderDate: "2026-02-10", status: "Processing" },
-  { id: "2", customerName: "Sophie Laurent", cardType: "Elite", cardColor: "Matte Black", address: "Rue de Rivoli 45, Paris", engravedName: { enabled: true, value: "S. LAURENT" }, paymentMethod: "Bank Transfer", orderDate: "2026-02-08", status: "Processing" },
-  { id: "3", customerName: "James Whitfield", cardType: "Pro", cardColor: "Rainbow", address: "10 Downing St, London", engravedName: { enabled: false }, paymentMethod: "Crypto", orderDate: "2026-02-06", status: "Completed" },
-  { id: "4", customerName: "Lena Fischer", cardType: "Ultra", cardColor: "Brushed Black", address: "Kurfürstendamm 88, Berlin", engravedName: { enabled: true, value: "L. FISCHER" }, paymentMethod: "Bank Transfer", orderDate: "2026-02-05", status: "Processing" },
-  { id: "5", customerName: "Marco Rossi", cardType: "Elite", cardColor: "White", address: "Via Roma 22, Milano", engravedName: { enabled: false }, paymentMethod: "Crypto", orderDate: "2026-02-04", status: "Completed" },
-  { id: "6", customerName: "Yuki Tanaka", cardType: "Pro", cardColor: "Stainless Steel", address: "Shibuya 3-14, Tokyo", engravedName: { enabled: true, value: "Y. TANAKA" }, paymentMethod: "Bank Transfer", orderDate: "2026-02-03", status: "Completed" },
-  { id: "7", customerName: "Elena Petrova", cardType: "Ultra", cardColor: "Glossy Black", address: "Nevsky Prospekt 50, Dubai", engravedName: { enabled: true, value: "E. PETROVA" }, paymentMethod: "Crypto", orderDate: "2026-02-09", status: "Processing" },
-  { id: "8", customerName: "Carlos Mendez", cardType: "Pro", cardColor: "Blue", address: "Paseo de la Reforma 200, CDMX", engravedName: { enabled: false }, paymentMethod: "Bank Transfer", orderDate: "2026-02-07", status: "Completed" },
-];
+const cardOrders: CardOrder[] = [];
 
 function formatEuro(value: number): string {
   return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(value);
@@ -200,6 +191,17 @@ export function DealsSection() {
               </tr>
             </thead>
             <tbody>
+              {filteredOrders.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="w-8 h-8 text-muted-foreground/50" />
+                      <p className="text-muted-foreground text-sm">No card orders yet</p>
+                      <p className="text-muted-foreground/60 text-xs">Orders will appear here once placed</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {filteredOrders.map((order, index) => {
                 const cardTypeBg: Record<CardType, string> = {
                   Pro: "bg-chart-1/10 text-chart-1",

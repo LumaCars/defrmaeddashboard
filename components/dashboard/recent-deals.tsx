@@ -47,6 +47,13 @@ export function RecentDeals({ orders }: RecentDealsProps) {
       </div>
 
       <div className="space-y-3">
+        {recent.length === 0 && (
+          <div className="py-12 flex flex-col items-center gap-2">
+            <Clock className="w-8 h-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No orders yet</p>
+            <p className="text-xs text-muted-foreground/60">Recent orders will appear here</p>
+          </div>
+        )}
         {recent.map((order, index) => {
           const status = statusConfig[order.status];
           const StatusIcon = status.icon;
