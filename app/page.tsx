@@ -8,11 +8,13 @@ import { DealsSection } from "@/components/dashboard/sections/deals";
 import { CustomersSection } from "@/components/dashboard/sections/customers";
 import { TeamSection } from "@/components/dashboard/sections/team";
 import { SettingsSection } from "@/components/dashboard/sections/settings";
+import { SignInPage } from "@/components/sign-in/sign-in-page";
 import { initialOrders, type CustomerOrder } from "@/lib/orders-data";
 
 export type Section = "overview" | "deals" | "customers" | "team" | "settings";
 
 export default function Dashboard() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>(initialOrders);
@@ -36,6 +38,10 @@ export default function Dashboard() {
       )
     );
   };
+
+  if (!isLoggedIn) {
+    return <SignInPage onLoginSuccess={() => setIsLoggedIn(true)} />;
+  }
 
   const renderSection = () => {
     switch (activeSection) {
