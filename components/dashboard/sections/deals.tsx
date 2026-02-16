@@ -37,11 +37,10 @@ interface CardOrder {
 
 const cardOrders: CardOrder[] = [];
 
-function formatEuro(value: number): string {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(value);
-}
+import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 export function DealsSection() {
+  const { settings } = useSettings();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCardType, setFilterCardType] = useState<string>("all");
   const [filterColor, setFilterColor] = useState<string>("all");
@@ -96,7 +95,7 @@ export function DealsSection() {
       {/* Header */}
       <div>
         <p className="text-sm text-muted-foreground">
-          View and manage all card orders -- Last 14 days -- Total Revenue: {formatEuro(totalRevenue)}
+          View and manage all card orders -- Last 14 days -- Total Revenue: {formatCurrency(totalRevenue, settings.currency)}
         </p>
       </div>
 
@@ -251,7 +250,7 @@ export function DealsSection() {
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-sm font-semibold text-foreground">
-                        {formatEuro(cardPrices[order.cardType])}
+                        {formatCurrency(cardPrices[order.cardType], settings.currency)}
                       </span>
                     </td>
                     <td className="py-4 px-4">
@@ -275,7 +274,7 @@ export function DealsSection() {
             Showing {filteredOrders.length} of {cardOrders.length} orders
           </span>
           <span className="text-sm font-medium text-foreground">
-            Filtered Revenue: {formatEuro(filteredOrders.reduce((sum, o) => sum + cardPrices[o.cardType], 0))}
+            Filtered Revenue: {formatCurrency(filteredOrders.reduce((sum, o) => sum + cardPrices[o.cardType], 0), settings.currency)}
           </span>
         </div>
       </div>

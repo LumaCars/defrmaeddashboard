@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { type CustomerOrder, type CardType, cardPrices, formatEuro } from "@/lib/orders-data";
+import { type CustomerOrder, cardPrices } from "@/lib/orders-data";
+import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 interface PipelineOverviewProps {
   orders: CustomerOrder[];
@@ -13,6 +14,7 @@ const stageColors: Record<string, string> = {
 };
 
 export function PipelineOverview({ orders }: PipelineOverviewProps) {
+  const { settings } = useSettings();
   const processing = orders.filter((o) => o.status === "Processing");
   const completed = orders.filter((o) => o.status === "Completed");
   const totalRevenue = orders.reduce((s, o) => s + cardPrices[o.cardType], 0);
@@ -66,7 +68,7 @@ export function PipelineOverview({ orders }: PipelineOverviewProps) {
                     {stage.count} orders
                   </span>
                   <span className="text-sm font-semibold text-foreground">
-                    {formatEuro(stage.value)}
+                    {formatCurrency(stage.value, settings.currency)}
                   </span>
                 </div>
               </div>
@@ -95,7 +97,7 @@ export function PipelineOverview({ orders }: PipelineOverviewProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Total Revenue</span>
           <span className="text-xl font-bold text-foreground">
-            {formatEuro(totalRevenue)}
+            {formatCurrency(totalRevenue, settings.currency)}
           </span>
         </div>
       </div>

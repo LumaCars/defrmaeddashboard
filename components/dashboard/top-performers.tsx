@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { CreditCard } from "lucide-react";
-import { type CustomerOrder, type CardType, cardPrices, formatEuro } from "@/lib/orders-data";
+import { type CustomerOrder, type CardType, cardPrices } from "@/lib/orders-data";
+import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 interface TopPerformersProps {
   orders: CustomerOrder[];
@@ -15,6 +16,7 @@ const cardColors: Record<string, string> = {
 };
 
 export function TopPerformers({ orders }: TopPerformersProps) {
+  const { settings } = useSettings();
   const totalOrders = orders.length;
 
   const breakdown = (["Pro", "Elite", "Ultra"] as CardType[]).map((type) => {
@@ -23,7 +25,7 @@ export function TopPerformers({ orders }: TopPerformersProps) {
     return {
       type: `${type} Card`,
       orders: count,
-      revenue: formatEuro(revenue),
+      revenue: formatCurrency(revenue, settings.currency),
       color: cardColors[type],
       percentage: totalOrders > 0 ? Math.round((count / totalOrders) * 100) : 0,
     };

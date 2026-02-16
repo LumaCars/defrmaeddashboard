@@ -6,13 +6,17 @@ import { PipelineOverview } from "@/components/dashboard/charts/pipeline-overvie
 import { RecentDeals } from "@/components/dashboard/recent-deals";
 import { TopPerformers } from "@/components/dashboard/top-performers";
 import { DollarSign, CreditCard, Users, ShoppingCart } from "lucide-react";
-import { type CustomerOrder, cardPrices, formatEuroCompact } from "@/lib/orders-data";
+import { type CustomerOrder, cardPrices } from "@/lib/orders-data";
+import { useSettings, formatCurrencyCompact } from "@/lib/settings-context";
 
 interface OverviewSectionProps {
   orders: CustomerOrder[];
 }
 
 export function OverviewSection({ orders }: OverviewSectionProps) {
+  const { settings } = useSettings();
+  const { currency } = settings;
+
   const totalRevenue = orders.reduce((sum, o) => sum + cardPrices[o.cardType], 0);
   const totalOrders = orders.length;
   const activeOrders = orders.filter((o) => o.status === "Processing").length;
@@ -25,7 +29,7 @@ export function OverviewSection({ orders }: OverviewSectionProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Revenue"
-          value={formatEuroCompact(totalRevenue)}
+          value={formatCurrencyCompact(totalRevenue, currency)}
           change={`${completedOrders} completed`}
           changeType="positive"
           icon={DollarSign}

@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, Clock, CheckCircle2 } from "lucide-react";
-import { type CustomerOrder, cardPrices, formatEuro } from "@/lib/orders-data";
+import { type CustomerOrder, cardPrices } from "@/lib/orders-data";
+import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 interface RecentDealsProps {
   orders: CustomerOrder[];
@@ -24,6 +25,7 @@ const statusConfig = {
 };
 
 export function RecentDeals({ orders }: RecentDealsProps) {
+  const { settings } = useSettings();
   const sorted = [...orders].sort(
     (a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
   );
@@ -116,7 +118,7 @@ export function RecentDeals({ orders }: RecentDealsProps) {
                       : "text-foreground"
                   )}
                 >
-                  {formatEuro(cardPrices[order.cardType])}
+                  {formatCurrency(cardPrices[order.cardType], settings.currency)}
                 </span>
                 <div
                   className={cn(

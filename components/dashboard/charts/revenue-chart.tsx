@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useSettings, formatCurrencyCompact, formatCurrency } from "@/lib/settings-context";
 
 const data: { day: string; revenue: number; orders: number }[] = [];
 
@@ -22,14 +23,8 @@ const cumulativeData = data.reduce<{ day: string; revenue: number; cumulative: n
   []
 );
 
-function formatEuro(value: number): string {
-  if (value >= 1000) {
-    return `\u20AC${(value / 1000).toFixed(1)}K`;
-  }
-  return `\u20AC${value}`;
-}
-
 export function RevenueChart() {
+  const { settings } = useSettings();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -90,7 +85,7 @@ export function RevenueChart() {
               axisLine={false}
               tickLine={false}
               tick={{ fill: "oklch(0.65 0 0)", fontSize: 12 }}
-              tickFormatter={(value) => formatEuro(value)}
+              tickFormatter={(value) => formatCurrencyCompact(value, settings.currency)}
               dx={-10}
             />
             <Tooltip
@@ -103,7 +98,7 @@ export function RevenueChart() {
               labelStyle={{ color: "oklch(0.95 0 0)", fontWeight: 600 }}
               itemStyle={{ color: "oklch(0.65 0 0)" }}
               formatter={(value: number, name: string) => [
-                formatEuro(value),
+                formatCurrency(value, settings.currency),
                 name === "cumulative" ? "Cumulative" : "Per Order",
               ]}
             />

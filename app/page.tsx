@@ -10,11 +10,11 @@ import { TeamSection } from "@/components/dashboard/sections/team";
 import { SettingsSection } from "@/components/dashboard/sections/settings";
 import { SignInPage } from "@/components/sign-in/sign-in-page";
 import { initialOrders, type CustomerOrder } from "@/lib/orders-data";
+import { SettingsProvider } from "@/lib/settings-context";
 
 export type Section = "overview" | "deals" | "customers" | "team" | "settings";
 
-export default function Dashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+function DashboardContent() {
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>(initialOrders);
@@ -38,10 +38,6 @@ export default function Dashboard() {
       )
     );
   };
-
-  if (!isLoggedIn) {
-    return <SignInPage onLoginSuccess={() => setIsLoggedIn(true)} />;
-  }
 
   const renderSection = () => {
     switch (activeSection) {
@@ -90,5 +86,19 @@ export default function Dashboard() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  if (!isLoggedIn) {
+    return <SignInPage onLoginSuccess={() => setIsLoggedIn(true)} />;
+  }
+
+  return (
+    <SettingsProvider>
+      <DashboardContent />
+    </SettingsProvider>
   );
 }

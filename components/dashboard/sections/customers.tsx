@@ -18,8 +18,8 @@ import {
   type CustomerOrder,
   type CardType,
   cardPrices,
-  formatEuroCompact,
 } from "@/lib/orders-data";
+import { useSettings, formatCurrencyCompact } from "@/lib/settings-context";
 
 interface CustomersSectionProps {
   orders: CustomerOrder[];
@@ -72,6 +72,7 @@ export function CustomersSection({
   onMarkCompleted,
   onUndoCompleted,
 }: CustomersSectionProps) {
+  const { settings } = useSettings();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCardType, setFilterCardType] = useState<string>("all");
   const [filterPayment, setFilterPayment] = useState<string>("all");
@@ -315,7 +316,7 @@ export function CustomersSection({
           },
           {
             label: "Total Revenue",
-            value: formatEuroCompact(totalRevenue),
+            value: formatCurrencyCompact(totalRevenue, settings.currency),
             icon: DollarSign,
             color: "text-accent",
             description: "Card orders revenue",
