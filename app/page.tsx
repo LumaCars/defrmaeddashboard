@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { OverviewSection } from "@/components/dashboard/sections/overview";
@@ -9,7 +9,7 @@ import { CustomersSection } from "@/components/dashboard/sections/customers";
 import { TeamSection } from "@/components/dashboard/sections/team";
 import { SettingsSection } from "@/components/dashboard/sections/settings";
 import { SignInPage } from "@/components/sign-in/sign-in-page";
-import { initialOrders, type CustomerOrder } from "@/lib/orders-data";
+import { type CustomerOrder, type DbCardOrder, mapDbOrder } from "@/lib/orders-data";
 import { SettingsProvider } from "@/lib/settings-context";
 
 export type Section = "overview" | "deals" | "customers" | "team" | "settings";
@@ -17,13 +17,35 @@ export type Section = "overview" | "deals" | "customers" | "team" | "settings";
 function DashboardContent() {
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [orders, setOrders] = useState<CustomerOrder[]>(initialOrders);
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/orders");
+      if (!res.ok) throw new Error("Failed to fetch orders");
+      const json = await res.json();
+      const mapped = (json.data as DbCardOrder[]).map(mapDbOrder);
+      setOrders(mapped);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
 
   const handleMarkCompleted = (email: string) => {
     setOrders((prev) =>
       prev.map((o) =>
-        o.email === email && o.status === "Processing"
-          ? { ...o, status: "Completed" as const }
+        o.email === email && o.status !== "completed"
+          ? { ...o, status: "completed" }
           : o
       )
     );
@@ -32,8 +54,8 @@ function DashboardContent() {
   const handleUndoCompleted = (email: string) => {
     setOrders((prev) =>
       prev.map((o) =>
-        o.email === email && o.status === "Completed"
-          ? { ...o, status: "Processing" as const }
+        o.email === email && o.status === "completed"
+          ? { ...o, status: "new" }
           : o
       )
     );
@@ -42,15 +64,16 @@ function DashboardContent() {
   const renderSection = () => {
     switch (activeSection) {
       case "overview":
-        return <OverviewSection orders={orders} />;
+        return <OverviewSection orders={orders} loading={loading} />;
       case "deals":
-        return <DealsSection />;
+        return <DealsSection orders={orders} loading={loading} />;
       case "customers":
         return (
           <CustomersSection
             orders={orders}
             onMarkCompleted={handleMarkCompleted}
             onUndoCompleted={handleUndoCompleted}
+            loading={loading}
           />
         );
       case "team":
@@ -58,7 +81,7 @@ function DashboardContent() {
       case "settings":
         return <SettingsSection />;
       default:
-        return <OverviewSection orders={orders} />;
+        return <OverviewSection orders={orders} loading={loading} />;
     }
   };
 

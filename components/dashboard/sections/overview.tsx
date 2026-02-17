@@ -11,16 +11,17 @@ import { useSettings, formatCurrencyCompact } from "@/lib/settings-context";
 
 interface OverviewSectionProps {
   orders: CustomerOrder[];
+  loading?: boolean;
 }
 
-export function OverviewSection({ orders }: OverviewSectionProps) {
+export function OverviewSection({ orders, loading }: OverviewSectionProps) {
   const { settings } = useSettings();
   const { currency } = settings;
 
   const totalRevenue = orders.reduce((sum, o) => sum + cardPrices[o.cardType], 0);
   const totalOrders = orders.length;
-  const activeOrders = orders.filter((o) => o.status === "Processing").length;
-  const completedOrders = orders.filter((o) => o.status === "Completed").length;
+  const activeOrders = orders.filter((o) => o.status !== "completed").length;
+  const completedOrders = orders.filter((o) => o.status === "completed").length;
   const uniqueCustomers = new Set(orders.map((o) => o.email)).size;
 
   return (
@@ -46,7 +47,7 @@ export function OverviewSection({ orders }: OverviewSectionProps) {
         <MetricCard
           title="Active Orders"
           value={activeOrders.toString()}
-          change="Processing"
+          change="Open"
           changeType="neutral"
           icon={ShoppingCart}
           delay={2}

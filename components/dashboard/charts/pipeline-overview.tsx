@@ -9,21 +9,21 @@ interface PipelineOverviewProps {
 }
 
 const stageColors: Record<string, string> = {
-  Processing: "bg-warning",
+  Open: "bg-warning",
   Completed: "bg-success",
 };
 
 export function PipelineOverview({ orders }: PipelineOverviewProps) {
   const { settings } = useSettings();
-  const processing = orders.filter((o) => o.status === "Processing");
-  const completed = orders.filter((o) => o.status === "Completed");
+  const open = orders.filter((o) => o.status !== "completed");
+  const completed = orders.filter((o) => o.status === "completed");
   const totalRevenue = orders.reduce((s, o) => s + cardPrices[o.cardType], 0);
 
   const stages = [
     {
-      name: "Processing",
-      count: processing.length,
-      value: processing.reduce((s, o) => s + cardPrices[o.cardType], 0),
+      name: "Open",
+      count: open.length,
+      value: open.reduce((s, o) => s + cardPrices[o.cardType], 0),
     },
     {
       name: "Completed",

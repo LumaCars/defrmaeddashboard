@@ -1,5 +1,4 @@
 export type CardType = "Pro" | "Elite" | "Ultra";
-export type PaymentMethod = "Crypto" | "Bank Transfer";
 
 export const cardPrices: Record<CardType, number> = {
   Pro: 1449,
@@ -14,19 +13,63 @@ export interface CustomerOrder {
   phone: string;
   cardType: CardType;
   cardColor: string;
-  paymentMethod: PaymentMethod;
+  address: string;
+  engravedName?: string;
+  wantsEngraving: boolean;
+  paymentMethod: string;
   orderDate: string;
-  status: "Processing" | "Completed";
+  status: string;
+  priceCents: number;
+  message?: string;
+}
+
+/** Raw row from Supabase */
+export interface DbCardOrder {
+  id: string;
+  created_at: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  card_type: string | null;
+  card_color: string | null;
+  address: string | null;
+  wants_engraving: boolean | null;
+  engraved_name: string | null;
+  payment_method: string | null;
+  message: string | null;
+  status: string | null;
+  price_cents: number | null;
+  currency: string | null;
+}
+
+function normalizeCardType(raw: string | null): CardType {
+  if (!raw) return "Pro";
+  const lower = raw.toLowerCase();
+  if (lower.includes("ultra")) return "Ultra";
+  if (lower.includes("elite")) return "Elite";
+  return "Pro";
+}
+
+/** Convert a DB row into the dashboard UI model */
+export function mapDbOrder(row: DbCardOrder): CustomerOrder {
+  const cardType = normalizeCardType(row.card_type);
+  return {
+    id: row.id,
+    customerName: [row.first_name, row.last_name].filter(Boolean).join(" ") || "Unknown",
+    email: row.email ?? "",
+    phone: row.phone ?? "",
+    cardType,
+    cardColor: row.card_color ?? "-",
+    address: row.address ?? "-",
+    engravedName: row.engraved_name ?? undefined,
+    wantsEngraving: row.wants_engraving ?? false,
+    paymentMethod: row.payment_method ?? "-",
+    orderDate: row.created_at ? row.created_at.slice(0, 10) : "",
+    status: row.status ?? "new",
+    priceCents: row.price_cents ?? 0,
+    message: row.message ?? undefined,
+  };
 }
 
 export const initialOrders: CustomerOrder[] = [];
-
-export function formatEuro(value: number): string {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(value);
-}
-
-export function formatEuroCompact(value: number): string {
-  if (value >= 1000000) return `\u20AC${(value / 1000000).toFixed(2)}M`;
-  if (value >= 1000) return `\u20AC${(value / 1000).toFixed(1)}K`;
-  return formatEuro(value);
-}

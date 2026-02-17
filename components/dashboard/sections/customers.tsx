@@ -25,6 +25,11 @@ interface CustomersSectionProps {
   orders: CustomerOrder[];
   onMarkCompleted: (email: string) => void;
   onUndoCompleted: (email: string) => void;
+  loading?: boolean;
+}
+
+function isCompleted(status: string) {
+  return status.toLowerCase() === "completed";
 }
 
 function buildCustomerMap(orders: CustomerOrder[]) {
@@ -38,8 +43,8 @@ function buildCustomerMap(orders: CustomerOrder[]) {
       lastOrderDate: string;
       latestCardType: CardType;
       latestCardColor: string;
-      paymentMethod: "Crypto" | "Bank Transfer";
-      latestStatus: "Processing" | "Completed";
+      paymentMethod: string;
+      latestStatus: string;
     }
   >();
 
@@ -71,6 +76,7 @@ export function CustomersSection({
   orders,
   onMarkCompleted,
   onUndoCompleted,
+  loading,
 }: CustomersSectionProps) {
   const { settings } = useSettings();
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,10 +93,10 @@ export function CustomersSection({
     0
   );
   const activeCardOrders = orders.filter(
-    (o) => o.status === "Processing"
+    (o) => !isCompleted(o.status)
   ).length;
   const completedCardOrders = orders.filter(
-    (o) => o.status === "Completed"
+    (o) => isCompleted(o.status)
   ).length;
 
   const cardTypeCounts: Record<CardType, number> = {
@@ -107,10 +113,10 @@ export function CustomersSection({
 
   // Split into active and completed
   const activeCustomers = customers.filter(
-    (c) => c.latestStatus === "Processing"
+    (c) => !isCompleted(c.latestStatus)
   );
   const completedCustomers = customers.filter(
-    (c) => c.latestStatus === "Completed"
+    (c) => isCompleted(c.latestStatus)
   );
 
   // Apply filters
@@ -140,13 +146,13 @@ export function CustomersSection({
   const renderRow = (
     customer: (typeof customers)[0],
     index: number,
-    isCompleted: boolean
+    isCompletedRow: boolean
   ) => (
     <tr
       key={customer.email}
       className={cn(
         "border-b border-border last:border-0 transition-colors duration-150 animate-in fade-in slide-in-from-left-2",
-        isCompleted
+        isCompletedRow
           ? "opacity-50"
           : "hover:bg-secondary/30"
       )}
@@ -160,7 +166,7 @@ export function CustomersSection({
           <div
             className={cn(
               "w-8 h-8 rounded-md flex items-center justify-center text-xs font-semibold",
-              isCompleted
+              isCompletedRow
                 ? "bg-muted text-muted-foreground"
                 : "bg-secondary text-muted-foreground"
             )}
@@ -170,7 +176,7 @@ export function CustomersSection({
           <span
             className={cn(
               "text-sm font-medium",
-              isCompleted ? "text-muted-foreground line-through" : "text-foreground"
+              isCompletedRow ? "text-muted-foreground line-through" : "text-foreground"
             )}
           >
             {customer.name}
@@ -187,7 +193,7 @@ export function CustomersSection({
         <span
           className={cn(
             "text-sm font-medium",
-            isCompleted ? "text-muted-foreground" : "text-foreground"
+            isCompletedRow ? "text-muted-foreground" : "text-foreground"
           )}
         >
           {customer.totalOrders}
@@ -202,7 +208,7 @@ export function CustomersSection({
         <span
           className={cn(
             "px-2 py-1 rounded-md text-xs font-medium",
-            isCompleted
+            isCompletedRow
               ? "bg-muted text-muted-foreground"
               : cardTypeBg[customer.latestCardType]
           )}
@@ -214,7 +220,7 @@ export function CustomersSection({
         <span
           className={cn(
             "text-sm",
-            isCompleted ? "text-muted-foreground" : "text-foreground"
+            isCompletedRow ? "text-muted-foreground" : "text-foreground"
           )}
         >
           {customer.latestCardColor}
@@ -224,7 +230,7 @@ export function CustomersSection({
         <span
           className={cn(
             "px-2 py-1 rounded-md text-xs font-medium",
-            isCompleted
+            isCompletedRow
               ? "bg-muted text-muted-foreground"
               : "bg-secondary text-foreground"
           )}
@@ -233,22 +239,22 @@ export function CustomersSection({
         </span>
       </td>
       <td className="py-4 px-4">
-        {isCompleted ? (
+        {isCompletedRow ? (
           <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-muted text-muted-foreground">
             Completed
           </span>
         ) : (
           <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-warning/10 text-warning">
-            Processing
+            {customer.latestStatus.charAt(0).toUpperCase() + customer.latestStatus.slice(1)}
           </span>
         )}
       </td>
       <td className="py-4 px-4">
-        {isCompleted ? (
+        {isCompletedRow ? (
           <button
             onClick={() => onUndoCompleted(customer.email)}
             className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-warning/10 hover:text-warning hover:border-warning/30 transition-all duration-200"
-            title="Undo - mark as processing"
+            title="Undo - reopen order"
           >
             <Undo2 className="w-4 h-4" />
           </button>

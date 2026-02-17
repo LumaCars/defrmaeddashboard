@@ -2,14 +2,9 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import {
-  Search,
-  ArrowUpDown,
-  ChevronDown,
-} from "lucide-react";
-
-type CardType = "Pro" | "Elite" | "Ultra";
-type PaymentMethod = "Crypto" | "Bank Transfer";
+import { Search, ArrowUpDown, ChevronDown, Loader2 } from "lucide-react";
+import { type CustomerOrder, type CardType, cardPrices } from "@/lib/orders-data";
+import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 const cardColors: Record<CardType, string[]> = {
   Pro: ["Red", "Rainbow", "Blue", "Pink", "Stainless Steel"],
@@ -17,29 +12,16 @@ const cardColors: Record<CardType, string[]> = {
   Ultra: ["Matte Black", "Glossy Black", "Brushed Black", "White", "24K Gold Edition"],
 };
 
-const cardPrices: Record<CardType, number> = {
-  Pro: 1449,
-  Elite: 3599,
-  Ultra: 14499,
-};
-
-interface CardOrder {
-  id: string;
-  customerName: string;
-  cardType: CardType;
-  cardColor: string;
-  address: string;
-  engravedName: { enabled: boolean; value?: string };
-  paymentMethod: PaymentMethod;
-  orderDate: string;
-  status: "Processing" | "Completed";
+function isCompleted(status: string) {
+  return status.toLowerCase() === "completed";
 }
 
-const cardOrders: CardOrder[] = [];
+interface DealsSectionProps {
+  orders: CustomerOrder[];
+  loading?: boolean;
+}
 
-import { useSettings, formatCurrency } from "@/lib/settings-context";
-
-export function DealsSection() {
+export function DealsSection({ orders, loading }: DealsSectionProps) {
   const { settings } = useSettings();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCardType, setFilterCardType] = useState<string>("all");
@@ -48,38 +30,41 @@ export function DealsSection() {
   const [sortField, setSortField] = useState<string>("orderDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const availableColors = filterCardType === "all"
-    ? [...new Set(Object.values(cardColors).flat())]
-    : cardColors[filterCardType as CardType] || [];
+  const availableColors =
+    filterCardType === "all"
+      ? [...new Set(Object.values(cardColors).flat())]
+      : cardColors[filterCardType as CardType] || [];
 
-  const filteredOrders = cardOrders.filter((order) => {
-    const matchesSearch =
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.cardType.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterCardType === "all" || order.cardType === filterCardType;
-    const matchesColor = filterColor === "all" || order.cardColor === filterColor;
-    const matchesPayment = filterPayment === "all" || order.paymentMethod === filterPayment;
-    return matchesSearch && matchesType && matchesColor && matchesPayment;
-  }).sort((a, b) => {
-    if (sortField === "orderDate") {
-      return sortDir === "desc"
-        ? new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
-        : new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime();
-    }
-    if (sortField === "customerName") {
-      return sortDir === "asc"
-        ? a.customerName.localeCompare(b.customerName)
-        : b.customerName.localeCompare(a.customerName);
-    }
-    if (sortField === "price") {
-      return sortDir === "desc"
-        ? cardPrices[b.cardType] - cardPrices[a.cardType]
-        : cardPrices[a.cardType] - cardPrices[b.cardType];
-    }
-    return 0;
-  });
+  const filteredOrders = orders
+    .filter((order) => {
+      const matchesSearch =
+        order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.cardType.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = filterCardType === "all" || order.cardType === filterCardType;
+      const matchesColor = filterColor === "all" || order.cardColor === filterColor;
+      const matchesPayment = filterPayment === "all" || order.paymentMethod === filterPayment;
+      return matchesSearch && matchesType && matchesColor && matchesPayment;
+    })
+    .sort((a, b) => {
+      if (sortField === "orderDate") {
+        return sortDir === "desc"
+          ? new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
+          : new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime();
+      }
+      if (sortField === "customerName") {
+        return sortDir === "asc"
+          ? a.customerName.localeCompare(b.customerName)
+          : b.customerName.localeCompare(a.customerName);
+      }
+      if (sortField === "price") {
+        return sortDir === "desc"
+          ? cardPrices[b.cardType] - cardPrices[a.cardType]
+          : cardPrices[a.cardType] - cardPrices[b.cardType];
+      }
+      return 0;
+    });
 
-  const totalRevenue = cardOrders.reduce((sum, order) => sum + cardPrices[order.cardType], 0);
+  const totalRevenue = orders.reduce((sum, order) => sum + cardPrices[order.cardType], 0);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -92,36 +77,29 @@ export function DealsSection() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <p className="text-sm text-muted-foreground">
-          View and manage all card orders -- Last 14 days -- Total Revenue: {formatCurrency(totalRevenue, settings.currency)}
+          View and manage all card orders -- Total Revenue: {formatCurrency(totalRevenue, settings.currency)}
         </p>
       </div>
 
-      {/* Filters and search */}
+      {/* Filters */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search customer name or card type..."
+              placeholder="Search customer or card type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-72 h-9 pl-9 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent transition-all duration-200"
             />
           </div>
-
-          {/* Card Type Filter */}
           <div className="relative">
             <select
               value={filterCardType}
-              onChange={(e) => {
-                setFilterCardType(e.target.value);
-                setFilterColor("all");
-              }}
+              onChange={(e) => { setFilterCardType(e.target.value); setFilterColor("all"); }}
               className="h-9 pl-3 pr-8 rounded-lg bg-secondary border border-border text-sm text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent transition-all duration-200"
             >
               <option value="all">All Card Types</option>
@@ -131,8 +109,6 @@ export function DealsSection() {
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           </div>
-
-          {/* Card Color Filter */}
           <div className="relative">
             <select
               value={filterColor}
@@ -146,8 +122,6 @@ export function DealsSection() {
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           </div>
-
-          {/* Payment Method Filter */}
           <div className="relative">
             <select
               value={filterPayment}
@@ -171,8 +145,7 @@ export function DealsSection() {
               <tr className="border-b border-border bg-secondary/50">
                 <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   <button className="flex items-center gap-1 hover:text-foreground transition-colors" onClick={() => handleSort("customerName")}>
-                    Customer Name
-                    <ArrowUpDown className="w-3 h-3" />
+                    Customer Name <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Card Type</th>
@@ -182,15 +155,24 @@ export function DealsSection() {
                 <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Payment Method</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   <button className="flex items-center gap-1 hover:text-foreground transition-colors" onClick={() => handleSort("price")}>
-                    Price
-                    <ArrowUpDown className="w-3 h-3" />
+                    Price <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.length === 0 && (
+              {loading && (
+                <tr>
+                  <td colSpan={8} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                      <p className="text-muted-foreground text-sm">Loading orders...</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {!loading && filteredOrders.length === 0 && (
                 <tr>
                   <td colSpan={8} className="py-20 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -201,12 +183,15 @@ export function DealsSection() {
                   </td>
                 </tr>
               )}
-              {filteredOrders.map((order, index) => {
+              {!loading && filteredOrders.map((order, index) => {
                 const cardTypeBg: Record<CardType, string> = {
                   Pro: "bg-chart-1/10 text-chart-1",
                   Elite: "bg-accent/10 text-accent",
                   Ultra: "bg-warning/10 text-warning",
                 };
+                const done = isCompleted(order.status);
+                const statusColor = done ? "bg-success/10 text-success" : "bg-warning/10 text-warning";
+                const statusLabel = done ? "Completed" : order.status.charAt(0).toUpperCase() + order.status.slice(1);
 
                 return (
                   <tr
@@ -227,26 +212,20 @@ export function DealsSection() {
                         {order.cardType} Card
                       </span>
                     </td>
+                    <td className="py-4 px-4"><span className="text-sm text-foreground">{order.cardColor}</span></td>
+                    <td className="py-4 px-4"><span className="text-sm text-muted-foreground max-w-[200px] truncate block">{order.address}</span></td>
                     <td className="py-4 px-4">
-                      <span className="text-sm text-foreground">{order.cardColor}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-muted-foreground max-w-[200px] truncate block">{order.address}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      {order.engravedName.enabled ? (
+                      {order.wantsEngraving ? (
                         <div>
                           <span className="text-xs font-medium text-success">Yes</span>
-                          <span className="text-xs text-muted-foreground ml-1.5">({order.engravedName.value})</span>
+                          {order.engravedName && <span className="text-xs text-muted-foreground ml-1.5">({order.engravedName})</span>}
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">No</span>
                       )}
                     </td>
                     <td className="py-4 px-4">
-                      <span className="px-2 py-1 rounded-md bg-secondary text-xs font-medium text-foreground">
-                        {order.paymentMethod}
-                      </span>
+                      <span className="px-2 py-1 rounded-md bg-secondary text-xs font-medium text-foreground">{order.paymentMethod}</span>
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-sm font-semibold text-foreground">
@@ -254,11 +233,8 @@ export function DealsSection() {
                       </span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-1 rounded-md text-xs font-medium",
-                        order.status === "Completed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
-                      )}>
-                        {order.status}
+                      <span className={cn("inline-flex items-center px-2 py-1 rounded-md text-xs font-medium", statusColor)}>
+                        {statusLabel}
                       </span>
                     </td>
                   </tr>
@@ -267,12 +243,8 @@ export function DealsSection() {
             </tbody>
           </table>
         </div>
-
-        {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-secondary/30">
-          <span className="text-sm text-muted-foreground">
-            Showing {filteredOrders.length} of {cardOrders.length} orders
-          </span>
+          <span className="text-sm text-muted-foreground">Showing {filteredOrders.length} of {orders.length} orders</span>
           <span className="text-sm font-medium text-foreground">
             Filtered Revenue: {formatCurrency(filteredOrders.reduce((sum, o) => sum + cardPrices[o.cardType], 0), settings.currency)}
           </span>
