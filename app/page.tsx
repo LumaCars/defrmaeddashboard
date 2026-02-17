@@ -8,7 +8,6 @@ import { DealsSection } from "@/components/dashboard/sections/deals";
 import { CustomersSection } from "@/components/dashboard/sections/customers";
 import { TeamSection } from "@/components/dashboard/sections/team";
 import { SettingsSection } from "@/components/dashboard/sections/settings";
-import { SignInPage } from "@/components/sign-in/sign-in-page";
 import { type CustomerOrder, type DbCardOrder, mapDbOrder } from "@/lib/orders-data";
 import { SettingsProvider } from "@/lib/settings-context";
 
@@ -36,7 +35,6 @@ function DashboardContent() {
 
   useEffect(() => {
     fetchOrders();
-    // Refresh every 30 seconds
     const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
   }, [fetchOrders]);
@@ -54,7 +52,6 @@ function DashboardContent() {
       }
     } catch (err) {
       console.error("Error persisting status:", err);
-      // Trigger a refetch to revert optimistic update
       fetchOrders();
     }
   }, [fetchOrders]);
@@ -66,7 +63,6 @@ function DashboardContent() {
           ? { ...o, status: "completed" }
           : o
       );
-      // Persist each affected order
       prev.forEach((o) => {
         if (o.email === email && o.status !== "completed") {
           persistStatus(o.id, "completed");
@@ -83,7 +79,6 @@ function DashboardContent() {
           ? { ...o, status: "new" }
           : o
       );
-      // Persist each affected order
       prev.forEach((o) => {
         if (o.email === email && o.status === "completed") {
           persistStatus(o.id, "new");
@@ -145,12 +140,6 @@ function DashboardContent() {
 }
 
 export default function Dashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  if (!isLoggedIn) {
-    return <SignInPage onLoginSuccess={() => setIsLoggedIn(true)} />;
-  }
-
   return (
     <SettingsProvider>
       <DashboardContent />
