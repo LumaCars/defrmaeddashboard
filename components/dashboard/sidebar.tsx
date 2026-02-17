@@ -12,7 +12,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
-  Settings,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -27,7 +26,6 @@ const navItems: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "deals", label: "Card Orders", icon: CreditCard },
   { id: "customers", label: "Customers", icon: Building2 },
   { id: "team", label: "Team", icon: Users },
-  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar({

@@ -7,11 +7,11 @@ import { OverviewSection } from "@/components/dashboard/sections/overview";
 import { DealsSection } from "@/components/dashboard/sections/deals";
 import { CustomersSection } from "@/components/dashboard/sections/customers";
 import { TeamSection } from "@/components/dashboard/sections/team";
-import { SettingsSection } from "@/components/dashboard/sections/settings";
+
 import { type CustomerOrder, type DbCardOrder, mapDbOrder } from "@/lib/orders-data";
 import { SettingsProvider } from "@/lib/settings-context";
 
-export type Section = "overview" | "deals" | "customers" | "team" | "settings";
+export type Section = "overview" | "deals" | "customers" | "team";
 
 function DashboardContent() {
   const [activeSection, setActiveSection] = useState<Section>("overview");
@@ -105,8 +105,6 @@ function DashboardContent() {
         );
       case "team":
         return <TeamSection />;
-      case "settings":
-        return <SettingsSection />;
       default:
         return <OverviewSection orders={orders} loading={loading} />;
     }

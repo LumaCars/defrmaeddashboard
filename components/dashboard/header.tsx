@@ -19,7 +19,6 @@ const sectionTitles: Record<Section, string> = {
   deals: "Card Orders",
   customers: "Customers",
   team: "Team Dashboard",
-  settings: "Settings",
 };
 
 export function Header({ activeSection, onRefresh }: HeaderProps) {
