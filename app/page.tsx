@@ -125,7 +125,7 @@ function DashboardContent() {
           sidebarCollapsed ? "ml-[72px]" : "ml-[260px]"
         }`}
       >
-        <Header activeSection={activeSection} />
+        <Header activeSection={activeSection} onRefresh={fetchOrders} />
         <main className="flex-1 p-6 overflow-auto">
           <div
             key={activeSection}

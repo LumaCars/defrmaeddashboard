@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { Section } from "@/app/page";
-import { Search, Calendar, LogOut } from "lucide-react";
+import { Search, Calendar, LogOut, RefreshCw } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSettings } from "@/lib/settings-context";
@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   activeSection: Section;
+  onRefresh?: () => Promise<void>;
 }
 
 const sectionTitles: Record<Section, string> = {
@@ -21,25 +22,21 @@ const sectionTitles: Record<Section, string> = {
   settings: "Settings",
 };
 
-export function Header({ activeSection }: HeaderProps) {
+export function Header({ activeSection, onRefresh }: HeaderProps) {
   const [searchFocused, setSearchFocused] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { settings } = useSettings();
   const { profile } = settings;
   const router = useRouter();
 
   const displayName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const handleRefresh = async () => {
+    if (!onRefresh || refreshing) return;
+    setRefreshing(true);
+    await onRefresh();
+    setRefreshing(false);
+  };
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -77,46 +74,43 @@ export function Header({ activeSection }: HeaderProps) {
           />
         </div>
 
-        {/* User avatar + name + dropdown */}
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            {displayName && (
-              <span className="text-sm font-medium text-foreground hidden lg:block">
-                {displayName}
-              </span>
-            )}
-            <Avatar className="w-9 h-9 ring-2 ring-transparent hover:ring-accent/50 transition-all duration-200">
-              {profile.avatarUrl ? (
-                <AvatarImage src={profile.avatarUrl} alt="Profile" />
-              ) : null}
-              <AvatarFallback className="bg-gradient-to-br from-accent/80 to-chart-1 text-xs font-semibold text-accent-foreground">
-                {profile.initials}
-              </AvatarFallback>
-            </Avatar>
-          </button>
+        {/* Refresh button */}
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center gap-2 h-9 px-3 rounded-lg border border-border bg-secondary text-sm text-foreground hover:bg-secondary/80 transition-all duration-200 disabled:opacity-50"
+          title="Aktualisieren"
+        >
+          <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
+          <span className="hidden sm:inline">Aktualisieren</span>
+        </button>
 
-          {/* Dropdown menu */}
-          {menuOpen && (
-            <div className="absolute right-0 top-12 w-48 rounded-lg border border-border bg-popover shadow-lg py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              {displayName && (
-                <div className="px-3 py-2 border-b border-border">
-                  <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{profile.email || ""}</p>
-                </div>
-              )}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-secondary transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Log out
-              </button>
-            </div>
+        {/* User avatar + name */}
+        <div className="flex items-center gap-2">
+          {displayName && (
+            <span className="text-sm font-medium text-foreground hidden lg:block">
+              {displayName}
+            </span>
           )}
+          <Avatar className="w-9 h-9">
+            {profile.avatarUrl ? (
+              <AvatarImage src={profile.avatarUrl} alt="Profile" />
+            ) : null}
+            <AvatarFallback className="bg-gradient-to-br from-accent/80 to-chart-1 text-xs font-semibold text-accent-foreground">
+              {profile.initials}
+            </AvatarFallback>
+          </Avatar>
         </div>
+
+        {/* Logout button */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 h-9 px-3 rounded-lg border border-destructive/30 text-sm text-destructive hover:bg-destructive/10 transition-all duration-200"
+          title="Abmelden"
+        >
+          <LogOut className="w-4 h-4" />
+          <span className="hidden sm:inline">Abmelden</span>
+        </button>
       </div>
     </header>
   );
