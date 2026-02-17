@@ -41,25 +41,57 @@ function DashboardContent() {
     return () => clearInterval(interval);
   }, [fetchOrders]);
 
-  const handleMarkCompleted = (email: string) => {
-    setOrders((prev) =>
-      prev.map((o) =>
+  const persistStatus = useCallback(async (orderId: string, status: string) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Failed to update status");
+      }
+    } catch (err) {
+      console.error("Error persisting status:", err);
+      // Trigger a refetch to revert optimistic update
+      fetchOrders();
+    }
+  }, [fetchOrders]);
+
+  const handleMarkCompleted = useCallback((email: string) => {
+    setOrders((prev) => {
+      const updated = prev.map((o) =>
         o.email === email && o.status !== "completed"
           ? { ...o, status: "completed" }
           : o
-      )
-    );
-  };
+      );
+      // Persist each affected order
+      prev.forEach((o) => {
+        if (o.email === email && o.status !== "completed") {
+          persistStatus(o.id, "completed");
+        }
+      });
+      return updated;
+    });
+  }, [persistStatus]);
 
-  const handleUndoCompleted = (email: string) => {
-    setOrders((prev) =>
-      prev.map((o) =>
+  const handleUndoCompleted = useCallback((email: string) => {
+    setOrders((prev) => {
+      const updated = prev.map((o) =>
         o.email === email && o.status === "completed"
           ? { ...o, status: "new" }
           : o
-      )
-    );
-  };
+      );
+      // Persist each affected order
+      prev.forEach((o) => {
+        if (o.email === email && o.status === "completed") {
+          persistStatus(o.id, "new");
+        }
+      });
+      return updated;
+    });
+  }, [persistStatus]);
 
   const renderSection = () => {
     switch (activeSection) {
