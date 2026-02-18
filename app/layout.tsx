@@ -8,12 +8,15 @@ const _dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'SalesOps Dashboard',
-  description: 'Sales Operations Dashboard - Analytics & Pipeline Management',
+  title: 'Dashboard Borderless Banking Cards',
+  description: 'Borderless Banking Cards - Admin Dashboard',
   generator: 'v0.app',
   icons: {
-    icon: '/favicon.png',
-    apple: '/favicon.png',
+    icon: [
+      { url: '/favicon.png?v=2', type: 'image/png' },
+    ],
+    apple: { url: '/favicon.png?v=2', type: 'image/png' },
+    shortcut: '/favicon.png?v=2',
   },
 }
 
