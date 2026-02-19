@@ -12,12 +12,9 @@ export const metadata: Metadata = {
   description: 'Borderless Banking Cards - Admin Dashboard',
   generator: 'v0.app',
   icons: {
-    icon: [
-      { url: '/icon.svg?v=3', type: 'image/svg+xml' },
-      { url: '/favicon.png?v=3', type: 'image/png' },
-    ],
-    apple: { url: '/favicon.png?v=3', type: 'image/png' },
-    shortcut: '/icon.svg?v=3',
+    icon: { url: '/images/logo-icon.svg', type: 'image/svg+xml' },
+    apple: { url: '/favicon.png', type: 'image/png' },
+    shortcut: '/favicon.png',
   },
 }
 
