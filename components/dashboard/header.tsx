@@ -51,7 +51,7 @@ export function Header({ activeSection, onRefresh }: HeaderProps) {
         </h1>
         <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="w-4 h-4" />
-          <span>Alle Daten</span>
+          <span>Last 14 days</span>
         </div>
       </div>
 
