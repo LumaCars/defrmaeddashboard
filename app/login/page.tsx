@@ -157,7 +157,7 @@ export default function LoginPage() {
                     <img
                       src="/images/borderless-logo.svg"
                       alt="Borderless Banking"
-                      className="h-12 w-auto object-contain"
+                      className="h-16 w-auto object-contain"
                     />
                   </div>
 
@@ -220,7 +220,7 @@ export default function LoginPage() {
                     <img
                       src="/images/borderless-logo.svg"
                       alt="Borderless Banking"
-                      className="h-12 w-auto object-contain"
+                      className="h-16 w-auto object-contain"
                     />
                   </div>
 
@@ -335,7 +335,7 @@ export default function LoginPage() {
                     <img
                       src="/images/borderless-logo.svg"
                       alt="Borderless Banking"
-                      className="h-12 w-auto object-contain"
+                      className="h-16 w-auto object-contain"
                     />
                   </div>
 
