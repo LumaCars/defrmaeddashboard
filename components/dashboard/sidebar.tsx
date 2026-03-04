@@ -46,19 +46,14 @@ export function Sidebar({
         "flex items-center border-b border-sidebar-border transition-all duration-300 overflow-hidden",
         collapsed ? "h-16 px-2 justify-center" : "h-20 px-4"
       )}>
-        {collapsed ? (
-          <img
-            src="/images/logo-icon.svg"
-            alt="Logo"
-            className="h-11 w-11 object-contain shrink-0"
-          />
-        ) : (
-          <img
-            src="/images/logo.png"
-            alt="Borderless Banking Logo"
-            className="h-14 w-auto max-w-[200px] object-contain shrink-0"
-          />
-        )}
+        <img
+          src="/images/borderless-logo.svg"
+          alt="Borderless Banking Logo"
+          className={cn(
+            "object-contain shrink-0 transition-all duration-300",
+            collapsed ? "h-8 w-auto" : "h-10 w-auto max-w-[180px]"
+          )}
+        />
       </div>
 
       {/* Navigation */}

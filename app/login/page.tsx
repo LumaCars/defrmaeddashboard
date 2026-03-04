@@ -155,7 +155,7 @@ export default function LoginPage() {
                   {/* Logo */}
                   <div className="flex justify-center mb-2">
                     <img
-                      src="/images/logo.png"
+                      src="/images/borderless-logo.svg"
                       alt="Borderless Banking"
                       className="h-12 w-auto object-contain"
                     />
@@ -218,9 +218,9 @@ export default function LoginPage() {
                 >
                   <div className="flex justify-center mb-2">
                     <img
-                      src="/images/logo-icon.svg"
+                      src="/images/borderless-logo.svg"
                       alt="Borderless Banking"
-                      className="h-10 w-10 object-contain"
+                      className="h-12 w-auto object-contain"
                     />
                   </div>
 
@@ -333,7 +333,7 @@ export default function LoginPage() {
                 >
                   <div className="flex justify-center mb-2">
                     <img
-                      src="/images/logo.png"
+                      src="/images/borderless-logo.svg"
                       alt="Borderless Banking"
                       className="h-12 w-auto object-contain"
                     />
