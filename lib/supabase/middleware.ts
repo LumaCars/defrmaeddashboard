@@ -48,11 +48,37 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Check if user is in admins table for protected routes
+  if (user && !isLoginPage && !isApiRoute) {
+    const { data: adminRecord } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!adminRecord) {
+      // User is not an admin, sign them out and redirect to login
+      await supabase.auth.signOut()
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+  }
+
   if (user && isLoginPage) {
-    // Already logged in, redirect to dashboard
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    return NextResponse.redirect(url)
+    // Check if logged-in user is an admin before redirecting to dashboard
+    const { data: adminRecord } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (adminRecord) {
+      // Admin user, redirect to dashboard
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse
