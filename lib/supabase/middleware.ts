@@ -6,12 +6,12 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Check if Supabase env vars are available
+  // Check if Supabase env vars are available - required for client creation
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('[v0] Supabase env vars missing, allowing request to proceed')
+    // Env vars not available - allow request to proceed without auth check
     return supabaseResponse
   }
 
