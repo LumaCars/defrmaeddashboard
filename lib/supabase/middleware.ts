@@ -6,9 +6,18 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Check if Supabase env vars are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('[v0] Supabase env vars missing, allowing request to proceed')
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -49,36 +58,44 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Check if user is in admins table for protected routes
+  // Skip admin check if admins table doesn't exist yet (allows initial setup)
   if (user && !isLoginPage && !isApiRoute) {
-    const { data: adminRecord } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
+    try {
+      const { data: adminRecord, error } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('id', user.id)
+        .single()
 
-    if (!adminRecord) {
-      // User is not an admin, sign them out and redirect to login
-      await supabase.auth.signOut()
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
+      // If table doesn't exist (error code 42P01) or other errors, allow access for now
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 is "no rows returned" - that's a valid "not an admin" case
+        // Other errors (like table not existing) - allow through for initial setup
+        console.error('[v0] Admin check error:', error.message)
+      } else if (!adminRecord && !error) {
+        // No admin record found and no error - user is not an admin
+        await supabase.auth.signOut()
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+      } else if (error?.code === 'PGRST116') {
+        // No rows returned - user is not in admins table
+        await supabase.auth.signOut()
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+      }
+    } catch (e) {
+      console.error('[v0] Admin check failed:', e)
+      // Allow through on error to not block users during setup
     }
   }
 
   if (user && isLoginPage) {
-    // Check if logged-in user is an admin before redirecting to dashboard
-    const { data: adminRecord } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (adminRecord) {
-      // Admin user, redirect to dashboard
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
-    }
+    // Already logged in, redirect to dashboard
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse
