@@ -44,14 +44,14 @@ export function Sidebar({
       {/* Logo */}
       <div className={cn(
         "flex items-center border-b border-sidebar-border transition-all duration-300 overflow-hidden",
-        collapsed ? "h-16 px-2 justify-center" : "h-20 px-4"
+        collapsed ? "h-20 px-2 justify-center" : "h-24 px-4"
       )}>
         <img
           src="/images/borderless-logo.svg"
           alt="Borderless Banking Logo"
           className={cn(
             "object-contain shrink-0 transition-all duration-300",
-            collapsed ? "h-8 w-auto" : "h-10 w-auto max-w-[180px]"
+            collapsed ? "h-10 w-auto" : "h-14 w-auto max-w-[220px]"
           )}
         />
       </div>
