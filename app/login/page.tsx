@@ -374,10 +374,7 @@ export default function LoginPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
-                    onClick={() => {
-                      // Use window.location for a full page reload to ensure middleware runs
-                      window.location.href = "/";
-                    }}
+                    onClick={() => router.push("/")}
                     className="w-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-black font-semibold py-3 hover:from-amber-500 hover:to-amber-600 transition-colors cursor-pointer"
                   >
                     Continue to Dashboard
