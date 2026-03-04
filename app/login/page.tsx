@@ -77,7 +77,12 @@ export default function LoginPage() {
 
     if (authError) {
       setIsLoading(false);
-      setError("Email or passcode is incorrect.");
+      console.error("[v0] Auth error:", authError.message);
+      if (authError.message.includes("Invalid login credentials")) {
+        setError("Email or passcode is incorrect. Make sure your account exists in Supabase Auth.");
+      } else {
+        setError(authError.message);
+      }
       return;
     }
 
