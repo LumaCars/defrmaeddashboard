@@ -9,10 +9,12 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [passcode, setPasscode] = useState(["", "", "", "", "", ""]);
-  const [step, setStep] = useState<"email" | "passcode">("email");
+  const [step, setStep] = useState<"email" | "passcode" | "success">("email");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [initialCanvasVisible, setInitialCanvasVisible] = useState(true);
+  const [reverseCanvasVisible, setReverseCanvasVisible] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -79,14 +81,23 @@ export default function LoginPage() {
       return;
     }
 
-    // Success - redirect immediately to dashboard
-    router.push("/");
+    // Success animation
+    setReverseCanvasVisible(true);
+    setTimeout(() => {
+      setInitialCanvasVisible(false);
+    }, 50);
+    setTimeout(() => {
+      setStep("success");
+      setIsLoading(false);
+    }, 2000);
   };
 
   const handleBackClick = () => {
     setStep("email");
     setPasscode(["", "", "", "", "", ""]);
     setError("");
+    setReverseCanvasVisible(false);
+    setInitialCanvasVisible(true);
   };
 
   const isPasscodeComplete = passcode.every((d) => d !== "");
@@ -95,18 +106,34 @@ export default function LoginPage() {
     <div className="flex w-full flex-col min-h-screen bg-black relative">
       {/* Background Canvas */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0">
-          <CanvasRevealEffect
-            animationSpeed={3}
-            containerClassName="bg-black"
-            colors={[
-              [234, 179, 8],
-              [255, 255, 255],
-            ]}
-            dotSize={6}
-            reverse={false}
-          />
-        </div>
+        {initialCanvasVisible && (
+          <div className="absolute inset-0">
+            <CanvasRevealEffect
+              animationSpeed={3}
+              containerClassName="bg-black"
+              colors={[
+                [234, 179, 8],
+                [255, 255, 255],
+              ]}
+              dotSize={6}
+              reverse={false}
+            />
+          </div>
+        )}
+        {reverseCanvasVisible && (
+          <div className="absolute inset-0">
+            <CanvasRevealEffect
+              animationSpeed={4}
+              containerClassName="bg-black"
+              colors={[
+                [234, 179, 8],
+                [255, 255, 255],
+              ]}
+              dotSize={6}
+              reverse={true}
+            />
+          </div>
+        )}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,1)_0%,_transparent_100%)]" />
         <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
       </div>
@@ -292,7 +319,68 @@ export default function LoginPage() {
                     </motion.button>
                   </div>
                 </motion.div>
-              ) : null}
+              ) : (
+                <motion.div
+                  key="success-step"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.4,
+                    ease: "easeOut",
+                    delay: 0.3,
+                  }}
+                  className="space-y-6 text-center"
+                >
+                  <div className="flex justify-center mb-2">
+                    <img
+                      src="/images/borderless-logo.svg"
+                      alt="Borderless Banking"
+                      className="h-12 w-auto object-contain"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <h1 className="text-[2rem] font-bold leading-[1.1] tracking-tight text-white text-balance">
+                      {"You're in!"}
+                    </h1>
+                    <p className="text-[1.1rem] text-white/50 font-light">
+                      Welcome to your dashboard
+                    </p>
+                  </div>
+
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                    className="py-8"
+                  >
+                    <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-black"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </motion.div>
+
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    onClick={() => router.push("/")}
+                    className="w-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-black font-semibold py-3 hover:from-amber-500 hover:to-amber-600 transition-colors cursor-pointer"
+                  >
+                    Continue to Dashboard
+                  </motion.button>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </div>
