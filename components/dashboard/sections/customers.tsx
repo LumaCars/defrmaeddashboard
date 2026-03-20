@@ -17,7 +17,6 @@ import {
 import {
   type CustomerOrder,
   type CardType,
-  cardPrices,
 } from "@/lib/orders-data";
 import { useSettings, formatCurrencyCompact } from "@/lib/settings-context";
 
@@ -89,7 +88,7 @@ export function CustomersSection({
   // KPIs
   const totalCustomers = customers.length;
   const totalRevenue = orders.reduce(
-    (sum, o) => sum + cardPrices[o.cardType],
+    (sum, o) => sum + (o.priceCents / 100),
     0
   );
   const activeCardOrders = orders.filter(

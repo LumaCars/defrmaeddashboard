@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Search, ArrowUpDown, ChevronDown, Loader2 } from "lucide-react";
-import { type CustomerOrder, type CardType, cardPrices } from "@/lib/orders-data";
+import { type CustomerOrder, type CardType } from "@/lib/orders-data";
 import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 const cardColors: Record<CardType, string[]> = {
@@ -58,13 +58,13 @@ export function DealsSection({ orders, loading }: DealsSectionProps) {
       }
       if (sortField === "price") {
         return sortDir === "desc"
-          ? cardPrices[b.cardType] - cardPrices[a.cardType]
-          : cardPrices[a.cardType] - cardPrices[b.cardType];
+          ? b.priceCents - a.priceCents
+          : a.priceCents - b.priceCents;
       }
       return 0;
     });
 
-  const totalRevenue = orders.reduce((sum, order) => sum + cardPrices[order.cardType], 0);
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.priceCents / 100), 0);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -229,7 +229,7 @@ export function DealsSection({ orders, loading }: DealsSectionProps) {
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(cardPrices[order.cardType], settings.currency)}
+                        {formatCurrency(order.priceCents / 100, settings.currency)}
                       </span>
                     </td>
                     <td className="py-4 px-4">
@@ -246,7 +246,7 @@ export function DealsSection({ orders, loading }: DealsSectionProps) {
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-secondary/30">
           <span className="text-sm text-muted-foreground">Showing {filteredOrders.length} of {orders.length} orders</span>
           <span className="text-sm font-medium text-foreground">
-            Filtered Revenue: {formatCurrency(filteredOrders.reduce((sum, o) => sum + cardPrices[o.cardType], 0), settings.currency)}
+            Filtered Revenue: {formatCurrency(filteredOrders.reduce((sum, o) => sum + (o.priceCents / 100), 0), settings.currency)}
           </span>
         </div>
       </div>
