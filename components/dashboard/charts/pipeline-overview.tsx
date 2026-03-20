@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { type CustomerOrder, cardPrices } from "@/lib/orders-data";
+import { type CustomerOrder } from "@/lib/orders-data";
 import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 interface PipelineOverviewProps {
@@ -17,18 +17,18 @@ export function PipelineOverview({ orders }: PipelineOverviewProps) {
   const { settings } = useSettings();
   const open = orders.filter((o) => o.status !== "completed");
   const completed = orders.filter((o) => o.status === "completed");
-  const totalRevenue = orders.reduce((s, o) => s + cardPrices[o.cardType], 0);
+  const totalRevenue = orders.reduce((s, o) => s + (o.priceCents / 100), 0);
 
   const stages = [
     {
       name: "Open",
       count: open.length,
-      value: open.reduce((s, o) => s + cardPrices[o.cardType], 0),
+      value: open.reduce((s, o) => s + (o.priceCents / 100), 0),
     },
     {
       name: "Completed",
       count: completed.length,
-      value: completed.reduce((s, o) => s + cardPrices[o.cardType], 0),
+      value: completed.reduce((s, o) => s + (o.priceCents / 100), 0),
     },
   ];
 

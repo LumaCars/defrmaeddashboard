@@ -1,8 +1,8 @@
 export type CardType = "Pro" | "Elite" | "Ultra";
 
 export const cardPrices: Record<CardType, number> = {
-  Pro: 1449,
-  Elite: 3599,
+  Pro: 1199,
+  Elite: 4199,
   Ultra: 14499,
 };
 

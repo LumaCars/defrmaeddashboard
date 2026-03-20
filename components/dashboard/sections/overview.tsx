@@ -6,7 +6,7 @@ import { PipelineOverview } from "@/components/dashboard/charts/pipeline-overvie
 import { RecentDeals } from "@/components/dashboard/recent-deals";
 import { TopPerformers } from "@/components/dashboard/top-performers";
 import { DollarSign, CreditCard, Users, ShoppingCart } from "lucide-react";
-import { type CustomerOrder, cardPrices } from "@/lib/orders-data";
+import { type CustomerOrder } from "@/lib/orders-data";
 import { useSettings, formatCurrencyCompact } from "@/lib/settings-context";
 
 interface OverviewSectionProps {
@@ -18,7 +18,7 @@ export function OverviewSection({ orders, loading }: OverviewSectionProps) {
   const { settings } = useSettings();
   const { currency } = settings;
 
-  const totalRevenue = orders.reduce((sum, o) => sum + cardPrices[o.cardType], 0);
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.priceCents / 100), 0);
   const totalOrders = orders.length;
   const activeOrders = orders.filter((o) => o.status !== "completed").length;
   const completedOrders = orders.filter((o) => o.status === "completed").length;

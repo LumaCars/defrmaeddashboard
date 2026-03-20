@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, Clock, CheckCircle2 } from "lucide-react";
-import { type CustomerOrder, cardPrices } from "@/lib/orders-data";
+import { type CustomerOrder } from "@/lib/orders-data";
 import { useSettings, formatCurrency } from "@/lib/settings-context";
 
 function isCompleted(status: string) {
@@ -91,7 +91,7 @@ export function RecentDeals({ orders }: RecentDealsProps) {
 
               <div className="flex items-center gap-3">
                 <span className={cn("text-sm font-semibold", done ? "text-muted-foreground" : "text-foreground")}>
-                  {formatCurrency(cardPrices[order.cardType], settings.currency)}
+                  {formatCurrency(order.priceCents / 100, settings.currency)}
                 </span>
                 <div className={cn(
                   "flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium",
